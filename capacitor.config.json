@@ -1,0 +1,20 @@
+{
+  "appId": "app.lovable.prepaidpay",
+  "appName": "PrepaidPay",
+  "webDir": "mobile/www",
+  "server": {
+    "url": "https://project--7e194fb2-0104-4881-941c-1786b5ed36d5.lovable.app",
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#0b0b0f",
+      "showSpinner": false
+    }
+  }
+}
