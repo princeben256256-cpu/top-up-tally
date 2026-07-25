@@ -1,15 +1,25 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { RefreshCw } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Search, Lock, ShieldCheck } from "lucide-react";
 import { AppShell } from "../components/AppShell";
-import { account, formatUGX } from "../lib/billing";
+import { lookupDevice } from "../lib/devices.functions";
+import { formatDate, formatMoney, daysRemaining } from "../lib/lock";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PrepaidPay — Manage your phone plan" },
-      { name: "description", content: "Track balance, due dates and pay your prepaid phone bill in seconds." },
-      { property: "og:title", content: "PrepaidPay — Manage your phone plan" },
-      { property: "og:description", content: "Track balance, due dates and pay your prepaid phone bill in seconds." },
+      { title: "PrepaidPay — Check your phone payment plan" },
+      {
+        name: "description",
+        content:
+          "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked.",
+      },
+      { property: "og:title", content: "PrepaidPay — Check your phone payment plan" },
+      {
+        property: "og:description",
+        content: "Check your device balance, due date and lock status in seconds.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -18,61 +28,113 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const pct = Math.round((account.totalPaid / account.total) * 100);
+  const lookup = useServerFn(lookupDevice);
+  const [query, setQuery] = useState("");
+  const [state, setState] = useState<"idle" | "loading" | "empty" | "found">("idle");
+  const [device, setDevice] = useState<any>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setState("loading");
+    try {
+      const result = await lookup({ data: { query } });
+      if (!result) {
+        setDevice(null);
+        setState("empty");
+      } else {
+        setDevice(result);
+        setState("found");
+      }
+    } catch {
+      setState("empty");
+    }
+  }
+
   return (
     <AppShell>
-      <header className="flex items-center justify-between px-5 pt-6 pb-5">
+      <header className="px-5 pt-8 pb-5">
         <div className="flex items-center gap-1.5">
-          <span className="text-lg font-semibold tracking-tight">{account.brand}</span>
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-brand rotate-45" />
+          <span className="text-lg font-semibold tracking-tight">PrepaidPay</span>
+          <span className="inline-block h-2.5 w-2.5 rotate-45 rounded-sm bg-brand" />
         </div>
-        <button className="text-muted-foreground hover:text-foreground">
-          <RefreshCw className="h-5 w-5" />
-        </button>
+        <h1 className="mt-4 text-2xl font-semibold leading-tight">
+          Check your device payment plan
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Enter the IMEI or the phone number your device was registered with.
+        </p>
       </header>
 
-      <section className="mx-5 rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <p className="text-sm text-muted-foreground text-center">
-          Good job! You have no outstanding payments.
-        </p>
-
-        <div className="mt-5">
-          <div className="h-3 w-full rounded-full bg-secondary overflow-hidden">
-            <div
-              className="h-full bg-[color:var(--progress)] rounded-full transition-all"
-              style={{ width: `${pct}%` }}
-            />
-          </div>
+      <form onSubmit={onSubmit} className="px-5">
+        <div className="flex items-center gap-2 rounded-full border border-border px-4 py-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="IMEI or phone number"
+            className="w-full bg-transparent text-sm outline-none"
+          />
         </div>
-
-        <div className="mt-4 flex justify-between text-xs">
-          <div>
-            <div className="text-muted-foreground">TOTAL PAID</div>
-            <div className="mt-1 font-medium">{formatUGX(account.totalPaid)}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-muted-foreground">TOTAL BALANCE</div>
-            <div className="mt-1 font-medium">{formatUGX(account.totalBalance)}</div>
-          </div>
-        </div>
-
-        <div className="mt-5 rounded-xl border border-border px-4 py-3 flex items-center gap-2 text-sm">
-          <span className="inline-block h-4 w-4 rounded-sm border border-muted-foreground" />
-          <span className="text-muted-foreground">Next due date</span>
-          <span className="ml-auto font-medium">{account.nextPaymentDue}</span>
-        </div>
-
-        <Link
-          to="/payments"
-          className="mt-5 block text-center rounded-full bg-brand text-brand-foreground font-semibold tracking-wide py-3.5 shadow-sm active:scale-[0.99] transition"
+        <button
+          type="submit"
+          className="mt-3 w-full rounded-full bg-brand py-3.5 font-semibold tracking-wide text-brand-foreground transition active:scale-[0.99]"
         >
-          PAY NOW
-        </Link>
-      </section>
+          {state === "loading" ? "CHECKING…" : "CHECK STATUS"}
+        </button>
+      </form>
 
-      <p className="mt-10 text-center text-[11px] text-muted-foreground">
-        {account.brand} ver. {account.version}, user: {account.user}
-      </p>
+      {state === "empty" && (
+        <p className="mt-6 px-5 text-center text-sm text-muted-foreground">
+          No device found for that IMEI or phone number.
+        </p>
+      )}
+
+      {state === "found" && device && (
+        <section className="mx-5 mt-6 rounded-2xl border border-border p-5">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
+              device.locked
+                ? "bg-destructive/10 text-destructive"
+                : "bg-brand-soft text-foreground"
+            }`}
+          >
+            {device.locked ? <Lock className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+            {device.locked ? "Device locked" : "Device unlocked"}
+          </div>
+
+          <h2 className="mt-3 text-lg font-semibold">{device.customer_name}</h2>
+          <p className="text-xs text-muted-foreground">
+            {device.device_model || "Device"} · IMEI {device.imei}
+          </p>
+
+          <dl className="mt-4 divide-y divide-border/60 text-sm">
+            <Row k="Outstanding balance" v={formatMoney(device.balance)} />
+            <Row k="Total paid" v={formatMoney(device.amount_paid)} />
+            <Row k="Daily rate" v={formatMoney(device.daily_rate)} />
+            <Row k="Unlocked until" v={formatDate(device.paid_until)} />
+            <Row
+              k="Days remaining"
+              v={String(Math.max(0, daysRemaining(device.paid_until)))}
+            />
+          </dl>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            {device.lock_message ||
+              (device.locked
+                ? "Make a payment at any agent to restore access to your phone."
+                : "Keep paying on time to keep your phone unlocked.")}
+          </p>
+        </section>
+      )}
     </AppShell>
+  );
+}
+
+function Row({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex justify-between py-2.5">
+      <dt className="text-muted-foreground">{k}</dt>
+      <dd className="font-medium">{v}</dd>
+    </div>
   );
 }

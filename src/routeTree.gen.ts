@@ -11,7 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PaymentsRouteImport } from './routes/payments'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
+import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
 
 const PaymentsRoute = PaymentsRouteImport.update({
   id: '/payments',
@@ -23,40 +27,92 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
+  id: '/admin/$id',
+  path: '/admin/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicDeviceHeartbeatRoute =
+  ApiPublicDeviceHeartbeatRouteImport.update({
+    id: '/api/public/device/heartbeat',
+    path: '/api/public/device/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/notifications': typeof NotificationsRoute
   '/payments': typeof PaymentsRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/notifications': typeof NotificationsRoute
   '/payments': typeof PaymentsRoute
+  '/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/payments': typeof PaymentsRoute
+  '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/notifications' | '/payments'
+  fullPaths:
+    | '/'
+    | '/notifications'
+    | '/payments'
+    | '/admin/$id'
+    | '/admin/'
+    | '/api/public/device/heartbeat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/notifications' | '/payments'
-  id: '__root__' | '/' | '/notifications' | '/payments'
+  to:
+    | '/'
+    | '/notifications'
+    | '/payments'
+    | '/admin/$id'
+    | '/admin'
+    | '/api/public/device/heartbeat'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/notifications'
+    | '/payments'
+    | '/_authenticated/admin/$id'
+    | '/_authenticated/admin/'
+    | '/api/public/device/heartbeat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   PaymentsRoute: typeof PaymentsRoute
+  ApiPublicDeviceHeartbeatRoute: typeof ApiPublicDeviceHeartbeatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -82,13 +145,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/$id': {
+      id: '/_authenticated/admin/$id'
+      path: '/admin/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/device/heartbeat': {
+      id: '/api/public/device/heartbeat'
+      path: '/api/public/device/heartbeat'
+      fullPath: '/api/public/device/heartbeat'
+      preLoaderRoute: typeof ApiPublicDeviceHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   PaymentsRoute: PaymentsRoute,
+  ApiPublicDeviceHeartbeatRoute: ApiPublicDeviceHeartbeatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
