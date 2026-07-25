@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "PrepaidPay — Check your phone payment plan" },
       {
         property: "og:description",
-        content: "Check your device balance, due date and lock status in seconds.",
+        content: "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "PrepaidPay — Check your phone payment plan" },
+      { name: "description", content: "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "PrepaidPay — Check your phone payment plan" },
+      { property: "og:description", content: "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PrepaidPay — Check your phone payment plan" },
+      { name: "twitter:description", content: "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/37a5c5ce-46e5-49a7-a1fa-0aa66e66d50e" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/37a5c5ce-46e5-49a7-a1fa-0aa66e66d50e" },
     ],
     links: [
       {
