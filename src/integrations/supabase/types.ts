@@ -14,16 +14,164 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      devices: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          created_by: string | null
+          customer_name: string
+          daily_rate: number
+          deposit_paid: number
+          device_model: string | null
+          enrolled_at: string | null
+          enrollment_secret: string
+          id: string
+          imei: string
+          last_seen_at: string | null
+          lock_message: string | null
+          lock_override: string
+          paid_until: string
+          phone_number: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          created_at?: string
+          created_by?: string | null
+          customer_name: string
+          daily_rate?: number
+          deposit_paid?: number
+          device_model?: string | null
+          enrolled_at?: string | null
+          enrollment_secret?: string
+          id?: string
+          imei: string
+          last_seen_at?: string | null
+          lock_message?: string | null
+          lock_override?: string
+          paid_until?: string
+          phone_number: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string
+          daily_rate?: number
+          deposit_paid?: number
+          device_model?: string | null
+          enrolled_at?: string | null
+          enrollment_secret?: string
+          id?: string
+          imei?: string
+          last_seen_at?: string | null
+          lock_message?: string | null
+          lock_override?: string
+          paid_until?: string
+          phone_number?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          days_added: number
+          device_id: string
+          id: string
+          method: string
+          note: string | null
+          recorded_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          days_added?: number
+          device_id: string
+          id?: string
+          method?: string
+          note?: string | null
+          recorded_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          days_added?: number
+          device_id?: string
+          id?: string
+          method?: string
+          note?: string | null
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "agent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +298,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "agent"],
+    },
   },
 } as const
