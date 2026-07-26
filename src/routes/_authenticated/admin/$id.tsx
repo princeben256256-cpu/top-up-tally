@@ -26,17 +26,59 @@ export const Route = createFileRoute("/_authenticated/admin/$id")({
 function DeviceDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const fetchDevice = useServerFn(getDevice);
   const pay = useServerFn(recordPayment);
   const lock = useServerFn(setLock);
+  const roleFn = useServerFn(getMyRole);
+  const removeDevice = useServerFn(deleteDevice);
+  const requestPay = useServerFn(requestPaymentFromCustomer);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("mobile_money");
+  const [promptAmount, setPromptAmount] = useState("");
+  const [promptPhone, setPromptPhone] = useState("");
+
+  const { data: roleData } = useQuery({ queryKey: ["my-role"], queryFn: () => roleFn({}) });
+  const isAdmin = roleData?.role === "admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["device", id],
     queryFn: () => fetchDevice({ data: { id } }),
   });
+
+  const promptMutation = useMutation({
+    mutationFn: () =>
+      requestPay({
+        data: {
+          device_id: id,
+          amount: Number(promptAmount),
+          phone: promptPhone || (data as any)?.device?.phone_number || "",
+        },
+      }),
+    onSuccess: (r: any) => {
+      toast.success(
+        r.status === "successful"
+          ? "Payment received"
+          : "Prompt sent — ask the customer to approve it",
+      );
+      setPromptAmount("");
+      qc.invalidateQueries({ queryKey: ["device", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => removeDevice({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Device deleted");
+      qc.invalidateQueries({ queryKey: ["devices"] });
+      navigate({ to: "/admin" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
 
   const payMutation = useMutation({
     mutationFn: () =>
