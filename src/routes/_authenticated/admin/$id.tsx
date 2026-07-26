@@ -140,26 +140,81 @@ function DeviceDetail() {
           <Row k="Last seen" v={d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : "Never"} />
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            onClick={() => lockMutation.mutate("locked")}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+        {isAdmin ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={() => lockMutation.mutate("locked")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+            >
+              <Lock className="h-4 w-4" /> Force lock
+            </button>
+            <button
+              onClick={() => lockMutation.mutate("unlocked")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+            >
+              <Unlock className="h-4 w-4" /> Force unlock
+            </button>
+            <button
+              onClick={() => lockMutation.mutate("auto")}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+            >
+              <RotateCcw className="h-4 w-4" /> Automatic
+            </button>
+            <button
+              onClick={() => {
+                if (confirm("Delete this device and its payment history?")) deleteMutation.mutate();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive"
+            >
+              <Trash2 className="h-4 w-4" /> Delete
+            </button>
+          </div>
+        ) : (
+          <p className="mt-4 text-xs text-muted-foreground">
+            Lock controls and device deletion are limited to admins.
+          </p>
+        )}
+
+        <section className="mt-6 rounded-xl border border-border p-4">
+          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Smartphone className="h-4 w-4" /> Request mobile money payment
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Sends an iotec prompt to the customer's phone. Days are added automatically on approval.
+          </p>
+          <form
+            className="mt-3 flex flex-wrap gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              promptMutation.mutate();
+            }}
           >
-            <Lock className="h-4 w-4" /> Force lock
-          </button>
-          <button
-            onClick={() => lockMutation.mutate("unlocked")}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
-          >
-            <Unlock className="h-4 w-4" /> Force unlock
-          </button>
-          <button
-            onClick={() => lockMutation.mutate("auto")}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
-          >
-            <RotateCcw className="h-4 w-4" /> Automatic
-          </button>
-        </div>
+            <input
+              type="tel"
+              value={promptPhone}
+              onChange={(e) => setPromptPhone(e.target.value)}
+              placeholder={d.phone_number}
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+            />
+            <input
+              type="number"
+              min={500}
+              required
+              value={promptAmount}
+              onChange={(e) => setPromptAmount(e.target.value)}
+              placeholder="Amount"
+              className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+            />
+            <button
+              type="submit"
+              disabled={promptMutation.isPending}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+            >
+              {promptMutation.isPending ? "Sending…" : "Send prompt"}
+            </button>
+          </form>
+        </section>
+
 
         <section className="mt-6 rounded-xl border border-border p-4">
           <h2 className="text-sm font-semibold">Record a payment</h2>
