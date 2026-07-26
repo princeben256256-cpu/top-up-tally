@@ -1,11 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Lock, Unlock, RotateCcw } from "lucide-react";
+import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getDevice, recordPayment, setLock } from "@/lib/devices.functions";
+import { getDevice, recordPayment, setLock, getMyRole, deleteDevice } from "@/lib/devices.functions";
+import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/lib/lock";
+
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
