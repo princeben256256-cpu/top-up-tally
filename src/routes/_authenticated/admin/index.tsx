@@ -37,14 +37,18 @@ function AdminHome() {
   const qc = useQueryClient();
   const fetchDevices = useServerFn(listDevices);
   const addDevice = useServerFn(createDevice);
+  const roleFn = useServerFn(getMyRole);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+
+  const { data: roleData } = useQuery({ queryKey: ["my-role"], queryFn: () => roleFn({}) });
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: () => fetchDevices({}),
   });
+
 
   const mutation = useMutation({
     mutationFn: () =>
