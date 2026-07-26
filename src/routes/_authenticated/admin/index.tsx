@@ -89,7 +89,11 @@ function AdminHome() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">Device console</h1>
-            <p className="text-sm text-muted-foreground">{devices.length} registered devices</p>
+            <p className="text-sm text-muted-foreground">
+              {devices.length} registered devices ·{" "}
+              <span className="capitalize">{roleData?.role ?? "…"}</span>
+            </p>
+
           </div>
           <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground">
             Sign out
