@@ -77,6 +77,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_intents: {
+        Row: {
+          amount: number
+          applied: boolean
+          created_at: string
+          device_id: string
+          external_id: string
+          id: string
+          initiated_by: string | null
+          iotec_id: string | null
+          payer_phone: string
+          status: string
+          status_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          applied?: boolean
+          created_at?: string
+          device_id: string
+          external_id: string
+          id?: string
+          initiated_by?: string | null
+          iotec_id?: string | null
+          payer_phone: string
+          status?: string
+          status_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          applied?: boolean
+          created_at?: string
+          device_id?: string
+          external_id?: string
+          id?: string
+          initiated_by?: string | null
+          iotec_id?: string | null
+          payer_phone?: string
+          status?: string
+          status_message?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ShieldCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { listDevices, createDevice } from "@/lib/devices.functions";
+import { listDevices, createDevice, getMyRole } from "@/lib/devices.functions";
 import { isLocked, balanceOf, formatMoney, daysRemaining } from "@/lib/lock";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -37,14 +37,18 @@ function AdminHome() {
   const qc = useQueryClient();
   const fetchDevices = useServerFn(listDevices);
   const addDevice = useServerFn(createDevice);
+  const roleFn = useServerFn(getMyRole);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+
+  const { data: roleData } = useQuery({ queryKey: ["my-role"], queryFn: () => roleFn({}) });
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: () => fetchDevices({}),
   });
+
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -85,7 +89,11 @@ function AdminHome() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold">Device console</h1>
-            <p className="text-sm text-muted-foreground">{devices.length} registered devices</p>
+            <p className="text-sm text-muted-foreground">
+              {devices.length} registered devices ·{" "}
+              <span className="capitalize">{roleData?.role ?? "…"}</span>
+            </p>
+
           </div>
           <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground">
             Sign out

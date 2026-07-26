@@ -66,9 +66,30 @@ export const setLock = createServerFn({ method: "POST" })
     return setLockFor(context.supabase as never, data);
   });
 
+export const deleteDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => idSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("devices").delete().eq("id", data.id);
+    if (error) throw new Error("Only admins can delete devices");
+    return { ok: true };
+  });
+
+export const getMyRole = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    return { role: (data?.role as string) ?? "agent" };
+  });
+
 export const lookupDevice = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ query: z.string().trim().min(6).max(30) }).parse(d))
   .handler(async ({ data }) => {
     const { lookupDevicePublic } = await import("./devices.server");
     return lookupDevicePublic(data.query);
   });
+

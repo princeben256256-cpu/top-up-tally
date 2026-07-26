@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
+import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
 
 const AuthRoute = AuthRouteImport.update({
@@ -40,6 +41,11 @@ const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   path: '/admin/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
+  id: '/api/public/iotec/callback',
+  path: '/api/public/iotec/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicDeviceHeartbeatRoute =
   ApiPublicDeviceHeartbeatRouteImport.update({
     id: '/api/public/device/heartbeat',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
+  '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
+  '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
+  '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,8 +87,15 @@ export interface FileRouteTypes {
     | '/admin/$id'
     | '/admin/'
     | '/api/public/device/heartbeat'
+    | '/api/public/iotec/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/admin/$id' | '/admin' | '/api/public/device/heartbeat'
+  to:
+    | '/'
+    | '/auth'
+    | '/admin/$id'
+    | '/admin'
+    | '/api/public/device/heartbeat'
+    | '/api/public/iotec/callback'
   id:
     | '__root__'
     | '/'
@@ -88,6 +104,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/'
     | '/api/public/device/heartbeat'
+    | '/api/public/iotec/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +112,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicDeviceHeartbeatRoute: typeof ApiPublicDeviceHeartbeatRoute
+  ApiPublicIotecCallbackRoute: typeof ApiPublicIotecCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -134,6 +152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/iotec/callback': {
+      id: '/api/public/iotec/callback'
+      path: '/api/public/iotec/callback'
+      fullPath: '/api/public/iotec/callback'
+      preLoaderRoute: typeof ApiPublicIotecCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/device/heartbeat': {
       id: '/api/public/device/heartbeat'
       path: '/api/public/device/heartbeat'
@@ -162,17 +187,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicDeviceHeartbeatRoute: ApiPublicDeviceHeartbeatRoute,
+  ApiPublicIotecCallbackRoute: ApiPublicIotecCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
