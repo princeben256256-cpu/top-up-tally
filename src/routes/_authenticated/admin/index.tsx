@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ShieldCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { listDevices, createDevice } from "@/lib/devices.functions";
+import { listDevices, createDevice, getMyRole } from "@/lib/devices.functions";
 import { isLocked, balanceOf, formatMoney, daysRemaining } from "@/lib/lock";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
