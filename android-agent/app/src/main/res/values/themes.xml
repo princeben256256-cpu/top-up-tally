@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.Agent" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.Agent.Lock" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>
