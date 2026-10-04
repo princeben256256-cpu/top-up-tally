@@ -4,7 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { getDevice, recordPayment, setLock, getMyRole, deleteDevice } from "@/lib/devices.functions";
+import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCustomer, getAgentSettings } from "@/lib/devices.functions";
+import { QRCodeSVG } from "qrcode.react";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/lib/lock";
 
@@ -117,10 +118,12 @@ function DeviceDetail() {
           <ArrowLeft className="h-4 w-4" /> All devices
         </Link>
 
-        <h1 className="mt-4 text-xl font-semibold">{d.customer_name}</h1>
+        <h1 className="mt-4 text-xl font-semibold">{d.customer_name || "In stock — no customer yet"}</h1>
         <p className="text-sm text-muted-foreground">
-          {d.phone_number} · {d.device_model || "Unknown model"} · IMEI {d.imei}
+          {d.phone_number ? `${d.phone_number} · ` : ""}{d.device_model || "Unknown model"} · IMEI {d.imei}
         </p>
+
+        {!d.customer_name && <AssignCustomer id={id} />}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <Stat label="Balance" value={formatMoney(balanceOf(d))} />
@@ -254,17 +257,7 @@ function DeviceDetail() {
           </form>
         </section>
 
-        <section className="mt-6">
-          <h2 className="text-sm font-semibold">Enrollment</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Enter these in the device agent app during setup on the customer's phone.
-          </p>
-          <pre className="mt-2 overflow-x-auto rounded-lg border border-border bg-muted p-3 text-xs">
-{`IMEI:   ${d.imei}
-Secret: ${d.enrollment_secret}
-API:    POST /api/public/device/heartbeat`}
-          </pre>
-        </section>
+        <SetupQr device={d} />
 
         <section className="mt-6">
           <h2 className="text-sm font-semibold">Payment history</h2>
@@ -307,5 +300,77 @@ function Row({ k, v }: { k: string; v: string }) {
       <span className="text-muted-foreground">{k}</span>
       <span className="font-medium">{v}</span>
     </div>
+  );
+}
+
+function AssignCustomer({ id }: { id: string }) {
+  const fn = useServerFn(assignCustomer);
+  const qc = useQueryClient();
+  const [f, setF] = useState({ customer_name: "", phone_number: "", deposit_paid: "" });
+  const m = useMutation({
+    mutationFn: () => fn({ data: { device_id: id, ...f, deposit_paid: Number(f.deposit_paid || 0) } }),
+    onSuccess: (r: any) => {
+      toast.success(`Customer added · ${r.days_added} days unlocked`);
+      qc.invalidateQueries({ queryKey: ["device", id] });
+      qc.invalidateQueries({ queryKey: ["devices"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        m.mutate();
+      }}
+      className="mt-4 grid gap-2 rounded-xl border-2 border-primary/40 p-4 sm:grid-cols-3"
+    >
+      <p className="text-sm font-semibold sm:col-span-3">Sell this phone to a customer</p>
+      <input required placeholder="Customer name" value={f.customer_name} onChange={(e) => setF({ ...f, customer_name: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
+      <input required type="tel" placeholder="Customer phone" value={f.phone_number} onChange={(e) => setF({ ...f, phone_number: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
+      <input type="number" min={0} placeholder="Deposit paid" value={f.deposit_paid} onChange={(e) => setF({ ...f, deposit_paid: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
+      <button disabled={m.isPending} className="rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:col-span-3">
+        {m.isPending ? "Saving…" : "Save customer"}
+      </button>
+    </form>
+  );
+}
+
+function SetupQr({ device }: { device: any }) {
+  const fn = useServerFn(getAgentSettings);
+  const { data } = useQuery({ queryKey: ["agent-settings"], queryFn: () => fn({}) });
+  const ready = !!data?.agent_apk_url && !!data?.agent_checksum;
+  const payload = ready
+    ? JSON.stringify({
+        "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "app.prepaidpay.agent/.AgentAdminReceiver",
+        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": data!.agent_apk_url,
+        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": data!.agent_checksum,
+        "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
+        "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
+        "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {
+          imei: device.imei,
+          secret: device.enrollment_secret,
+        },
+      })
+    : "";
+  return (
+    <section className="mt-6 rounded-xl border border-border p-4">
+      <h2 className="text-sm font-semibold">Setup QR for this phone</h2>
+      {ready ? (
+        <>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Factory-reset the phone, tap the welcome screen 6 times, connect to Wi‑Fi and scan this. The phone installs
+            the lock app and enrolls itself — nothing to type.
+          </p>
+          <div className="mt-3 inline-block rounded-lg bg-card p-3">
+            <QRCodeSVG value={payload} size={260} level="M" />
+          </div>
+          <p className="mt-2 text-xs text-destructive">Keep this QR private — it is this phone's key.</p>
+        </>
+      ) : (
+        <p className="mt-1 text-xs text-muted-foreground">
+          An admin must first fill in "Lock app setup" on the device list page.
+        </p>
+      )}
+    </section>
   );
 }
