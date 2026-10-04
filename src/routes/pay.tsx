@@ -8,7 +8,7 @@ import { lookupDevice } from "../lib/devices.functions";
 import { startMobileMoneyPayment, checkMobileMoneyPayment } from "../lib/payments.functions";
 import { formatDate, formatMoney, daysRemaining } from "../lib/lock";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/pay")({
   head: () => ({
     meta: [
       { title: "PrepaidPay — Check your phone payment plan" },
