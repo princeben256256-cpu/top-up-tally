@@ -47,6 +47,17 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Publish hosted release (permanent download link)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete customer-latest --yes --cleanup-tag || true
+          gh release create customer-latest \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            --latest \
+            --title "PrepaidPay customer app (latest)" \
+            --notes "Auto-published by CI. Share this link with customers."
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
