@@ -57,6 +57,7 @@ function CustomerConsole() {
         setState("empty");
       } else {
         setDevice(result);
+        window.localStorage.setItem(LAST_QUERY, result.imei ?? q);
         setPayPhone(result.phone_number ?? "");
         setAmount(String(Math.min(Number(result.balance) || 0, Number(result.daily_rate) * 7)));
         setState("found");
@@ -77,7 +78,6 @@ function CustomerConsole() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    window.localStorage.setItem(LAST_QUERY, query);
     await load(query);
   }
 
@@ -156,6 +156,23 @@ function CustomerConsole() {
 
   return (
     <AppShell>
+      {state === "found" && device ? (
+        <div className="flex items-center justify-between px-5 pt-5">
+          <span className="text-xs text-muted-foreground">Signed in to this device</span>
+          <button
+            type="button"
+            onClick={() => {
+              window.localStorage.removeItem(LAST_QUERY);
+              setDevice(null);
+              setQuery("");
+              setState("idle");
+            }}
+            className="text-xs font-medium text-brand underline"
+          >
+            Switch device
+          </button>
+        </div>
+      ) : (<>
       <section className="px-5 pt-6 pb-2">
         <h1 className="font-display text-2xl font-semibold leading-tight">
           Check your device payment plan
@@ -182,6 +199,7 @@ function CustomerConsole() {
           {state === "loading" ? "CHECKING…" : "CHECK STATUS"}
         </button>
       </form>
+      </>)}
 
       {state === "empty" && (
         <p className="mt-6 px-5 text-center text-sm text-muted-foreground">
