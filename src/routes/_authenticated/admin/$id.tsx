@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2 } from "lucide-react";
+import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2, QrCode, Banknote, Send } from "lucide-react";
 import { toast } from "sonner";
 import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCustomer, getAgentSettings } from "@/lib/devices.functions";
 import { QRCodeSVG } from "qrcode.react";
@@ -110,33 +110,54 @@ function DeviceDetail() {
 
   const d: any = data.device;
   const locked = isLocked(d);
+  const total = Number(d.total_price) || 0;
+  const paid = Number(d.amount_paid) || 0;
+  const progress = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-3xl px-5 py-8">
-        <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground">
-          <ArrowLeft className="h-4 w-4" /> All devices
-        </Link>
+      <header className={`${locked ? "bg-destructive" : "bg-navy-deep"} text-white`}>
+        <div className="mx-auto w-full max-w-3xl px-5 py-5">
+          <Link to="/admin" className="inline-flex items-center gap-1 text-xs font-medium text-white/70 hover:text-white">
+            <ArrowLeft className="h-3.5 w-3.5" /> All devices
+          </Link>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate font-display text-xl font-semibold">
+                {d.customer_name || "In stock — no customer yet"}
+              </h1>
+              <p className="mt-0.5 truncate text-xs text-white/70">
+                {d.phone_number ? `${d.phone_number} · ` : ""}{d.device_model || "Unknown model"} · IMEI {d.imei}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${locked ? "bg-white/15 text-white" : "bg-white/15 text-white"}`}>
+              {locked ? "LOCKED" : `UNLOCKED · ${Math.max(0, daysRemaining(d.paid_until))}d`}
+            </span>
+          </div>
 
-        <h1 className="mt-4 text-xl font-semibold">{d.customer_name || "In stock — no customer yet"}</h1>
-        <p className="text-sm text-muted-foreground">
-          {d.phone_number ? `${d.phone_number} · ` : ""}{d.device_model || "Unknown model"} · IMEI {d.imei}
-        </p>
+          <div className="mt-4">
+            <div className="flex items-baseline justify-between text-xs text-white/70">
+              <span>Payoff progress</span>
+              <span className="font-display font-semibold text-white">{progress}%</span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15">
+              <div className="h-full rounded-full bg-white transition-all" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+        </div>
+      </header>
 
+      <div className="mx-auto w-full max-w-3xl px-5 py-6">
         {!d.customer_name && <AssignCustomer id={id} />}
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-2 grid-cols-3">
           <Stat label="Balance" value={formatMoney(balanceOf(d))} />
           <Stat label="Paid" value={formatMoney(d.amount_paid)} />
-          <Stat
-            label="Status"
-            value={locked ? "Locked" : `Unlocked · ${Math.max(0, daysRemaining(d.paid_until))}d`}
-          />
+          <Stat label="Daily rate" value={formatMoney(d.daily_rate)} />
         </div>
 
-        <div className="mt-3 rounded-xl border border-border p-4 text-sm">
+        <div className="mt-3 rounded-xl border border-border bg-card p-4 text-sm">
           <Row k="Total price" v={formatMoney(d.total_price)} />
-          <Row k="Daily rate" v={formatMoney(d.daily_rate)} />
           <Row k="Paid until" v={formatDate(d.paid_until)} />
           <Row k="Lock mode" v={d.lock_override} />
           <Row k="Enrolled" v={d.enrolled_at ? formatDate(d.enrolled_at) : "Not yet enrolled"} />
@@ -144,32 +165,32 @@ function DeviceDetail() {
         </div>
 
         {isAdmin ? (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <button
               onClick={() => lockMutation.mutate("locked")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 text-xs font-semibold"
             >
-              <Lock className="h-4 w-4" /> Force lock
+              <Lock className="h-3.5 w-3.5" /> Force lock
             </button>
             <button
               onClick={() => lockMutation.mutate("unlocked")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 text-xs font-semibold"
             >
-              <Unlock className="h-4 w-4" /> Force unlock
+              <Unlock className="h-3.5 w-3.5" /> Force unlock
             </button>
             <button
               onClick={() => lockMutation.mutate("auto")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2.5 text-xs font-semibold"
             >
-              <RotateCcw className="h-4 w-4" /> Automatic
+              <RotateCcw className="h-3.5 w-3.5" /> Automatic
             </button>
             <button
               onClick={() => {
                 if (confirm("Delete this device and its payment history?")) deleteMutation.mutate();
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-card px-3 py-2.5 text-xs font-semibold text-destructive"
             >
-              <Trash2 className="h-4 w-4" /> Delete
+              <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
           </div>
         ) : (
@@ -178,15 +199,15 @@ function DeviceDetail() {
           </p>
         )}
 
-        <section className="mt-6 rounded-xl border border-border p-4">
-          <h2 className="flex items-center gap-1.5 text-sm font-semibold">
-            <Smartphone className="h-4 w-4" /> Request mobile money payment
+        <section className="mt-5 rounded-xl border border-border bg-card p-4">
+          <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
+            <Send className="h-4 w-4 text-brand" /> Request mobile money payment
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Sends an iotec prompt to the customer's phone. Days are added automatically on approval.
           </p>
           <form
-            className="mt-3 flex flex-wrap gap-2"
+            className="mt-3 grid gap-2 sm:grid-cols-[1fr_120px_auto]"
             onSubmit={(e) => {
               e.preventDefault();
               promptMutation.mutate();
@@ -196,8 +217,8 @@ function DeviceDetail() {
               type="tel"
               value={promptPhone}
               onChange={(e) => setPromptPhone(e.target.value)}
-              placeholder={d.phone_number}
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+              placeholder={d.phone_number || "Customer phone"}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
             />
             <input
               type="number"
@@ -206,12 +227,12 @@ function DeviceDetail() {
               value={promptAmount}
               onChange={(e) => setPromptAmount(e.target.value)}
               placeholder="Amount"
-              className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
             />
             <button
               type="submit"
               disabled={promptMutation.isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               {promptMutation.isPending ? "Sending…" : "Send prompt"}
             </button>
@@ -219,10 +240,12 @@ function DeviceDetail() {
         </section>
 
 
-        <section className="mt-6 rounded-xl border border-border p-4">
-          <h2 className="text-sm font-semibold">Record a payment</h2>
+        <section className="mt-4 rounded-xl border border-border bg-card p-4">
+          <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
+            <Banknote className="h-4 w-4 text-brand" /> Record a payment
+          </h2>
           <form
-            className="mt-3 flex flex-wrap gap-2"
+            className="mt-3 grid gap-2 sm:grid-cols-[1fr_140px_auto]"
             onSubmit={(e) => {
               e.preventDefault();
               payMutation.mutate();
@@ -235,7 +258,7 @@ function DeviceDetail() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Amount"
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
             />
             <select
               value={method}
@@ -250,7 +273,7 @@ function DeviceDetail() {
             <button
               type="submit"
               disabled={payMutation.isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
               Record
             </button>
@@ -259,17 +282,17 @@ function DeviceDetail() {
 
         <SetupQr device={d} />
 
-        <section className="mt-6">
-          <h2 className="text-sm font-semibold">Payment history</h2>
-          <ul className="mt-2 divide-y divide-border rounded-xl border border-border">
+        <section className="mt-5">
+          <h2 className="font-display text-sm font-semibold">Payment history</h2>
+          <ul className="mt-2 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
             {data.payments.length === 0 && (
               <li className="p-4 text-sm text-muted-foreground">No payments yet.</li>
             )}
             {data.payments.map((p: any) => (
               <li key={p.id} className="flex items-center justify-between px-4 py-3 text-sm">
                 <div>
-                  <p className="font-medium">{formatMoney(p.amount)}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-display font-semibold">{formatMoney(p.amount)}</p>
+                  <p className="text-xs capitalize text-muted-foreground">
                     {p.method.replace("_", " ")} · +{p.days_added} days
                   </p>
                 </div>
@@ -287,9 +310,9 @@ function DeviceDetail() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-border p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+    <div className="rounded-xl border border-border bg-card p-3.5">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate font-display text-base font-semibold">{value}</p>
     </div>
   );
 }
@@ -322,12 +345,12 @@ function AssignCustomer({ id }: { id: string }) {
         e.preventDefault();
         m.mutate();
       }}
-      className="mt-4 grid gap-2 rounded-xl border-2 border-primary/40 p-4 sm:grid-cols-3"
+      className="mb-4 grid gap-2 rounded-xl border-2 border-brand/40 bg-card p-4 sm:grid-cols-3"
     >
-      <p className="text-sm font-semibold sm:col-span-3">Sell this phone to a customer</p>
-      <input required placeholder="Customer name" value={f.customer_name} onChange={(e) => setF({ ...f, customer_name: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
-      <input required type="tel" placeholder="Customer phone" value={f.phone_number} onChange={(e) => setF({ ...f, phone_number: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
-      <input type="number" min={0} placeholder="Deposit paid" value={f.deposit_paid} onChange={(e) => setF({ ...f, deposit_paid: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none" />
+      <p className="font-display text-sm font-semibold sm:col-span-3">Sell this phone to a customer</p>
+      <input required placeholder="Customer name" value={f.customer_name} onChange={(e) => setF({ ...f, customer_name: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring" />
+      <input required type="tel" placeholder="Customer phone" value={f.phone_number} onChange={(e) => setF({ ...f, phone_number: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring" />
+      <input type="number" min={0} placeholder="Deposit paid" value={f.deposit_paid} onChange={(e) => setF({ ...f, deposit_paid: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring" />
       <button disabled={m.isPending} className="rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60 sm:col-span-3">
         {m.isPending ? "Saving…" : "Save customer"}
       </button>
@@ -353,18 +376,20 @@ function SetupQr({ device }: { device: any }) {
       })
     : "";
   return (
-    <section className="mt-6 rounded-xl border border-border p-4">
-      <h2 className="text-sm font-semibold">Setup QR for this phone</h2>
+    <section className="mt-4 rounded-xl border border-border bg-card p-4">
+      <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
+        <QrCode className="h-4 w-4 text-brand" /> Setup QR for this phone
+      </h2>
       {ready ? (
         <>
           <p className="mt-1 text-xs text-muted-foreground">
             Factory-reset the phone, tap the welcome screen 6 times, connect to Wi‑Fi and scan this. The phone installs
             the lock app and enrolls itself — nothing to type.
           </p>
-          <div className="mt-3 inline-block rounded-lg bg-card p-3">
+          <div className="mt-3 inline-block rounded-xl border border-border bg-white p-3">
             <QRCodeSVG value={payload} size={260} level="M" />
           </div>
-          <p className="mt-2 text-xs text-destructive">Keep this QR private — it is this phone's key.</p>
+          <p className="mt-2 text-xs font-medium text-destructive">Keep this QR private — it is this phone's key.</p>
         </>
       ) : (
         <p className="mt-1 text-xs text-muted-foreground">

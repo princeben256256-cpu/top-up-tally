@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { Search, Lock, ShieldCheck, Smartphone, Wallet, CalendarDays, BadgeDollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { lookupDevice } from "../lib/devices.functions";
@@ -134,24 +134,24 @@ function Home() {
       ].filter((p) => p.value > 0)
     : [];
 
+  const total = Number(device?.total_price) || 0;
+  const paid = Number(device?.amount_paid) || 0;
+  const progress = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+
   return (
     <AppShell>
-      <header className="px-5 pt-8 pb-5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-lg font-semibold tracking-tight">PrepaidPay</span>
-          <span className="inline-block h-2.5 w-2.5 rotate-45 rounded-sm bg-brand" />
-        </div>
-        <h1 className="mt-4 text-2xl font-semibold leading-tight">
+      <section className="px-5 pt-6 pb-2">
+        <h1 className="font-display text-2xl font-semibold leading-tight">
           Check your device payment plan
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Enter the IMEI or the phone number your device was registered with.
         </p>
-      </header>
+      </section>
 
-      <form onSubmit={onSubmit} className="px-5">
-        <div className="flex items-center gap-2 rounded-full border border-border px-4 py-3">
-          <Search className="h-4 w-4 text-muted-foreground" />
+      <form onSubmit={onSubmit} className="px-5 pt-3">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-3.5 focus-within:border-ring">
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -161,7 +161,7 @@ function Home() {
         </div>
         <button
           type="submit"
-          className="mt-3 w-full rounded-full bg-brand py-3.5 font-semibold tracking-wide text-brand-foreground transition active:scale-[0.99]"
+          className="mt-3 w-full rounded-xl bg-navy py-3.5 font-display text-sm font-semibold tracking-wide text-white transition active:scale-[0.99]"
         >
           {state === "loading" ? "CHECKING…" : "CHECK STATUS"}
         </button>
@@ -175,57 +175,66 @@ function Home() {
 
       {state === "found" && device && (
         <>
-          <section className="mx-5 mt-6 rounded-2xl border border-border p-5">
-            <div
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs ${
-                device.locked
-                  ? "bg-destructive/10 text-destructive"
-                  : "bg-brand-soft text-foreground"
-              }`}
-            >
-              {device.locked ? <Lock className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-              {device.locked ? "Device locked" : "Device unlocked"}
+          <section className="mx-5 mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+            <div className={`px-5 py-4 ${device.locked ? "bg-destructive" : "bg-navy"}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-white">
+                  {device.locked ? <Lock className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+                  <span className="font-display text-sm font-semibold">
+                    {device.locked ? "Device locked" : "Device unlocked"}
+                  </span>
+                </div>
+                {!device.locked && (
+                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
+                    {Math.max(0, daysRemaining(device.paid_until))} days left
+                  </span>
+                )}
+              </div>
+              <h2 className="mt-2 font-display text-lg font-semibold text-white">{device.customer_name}</h2>
+              <p className="text-xs text-white/70">
+                {device.device_model || "Device"} · IMEI {device.imei}
+              </p>
             </div>
 
-            <h2 className="mt-3 text-lg font-semibold">{device.customer_name}</h2>
-            <p className="text-xs text-muted-foreground">
-              {device.device_model || "Device"} · IMEI {device.imei}
-            </p>
+            <div className="px-5 py-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-muted-foreground">Payoff progress</span>
+                <span className="font-display text-sm font-semibold">{progress}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progress}%` }} />
+              </div>
 
-            <dl className="mt-4 divide-y divide-border/60 text-sm">
-              <Row k="Outstanding balance" v={formatMoney(device.balance)} />
-              <Row k="Total paid" v={formatMoney(device.amount_paid)} />
-              <Row k="Daily rate" v={formatMoney(device.daily_rate)} />
-              <Row k="Unlocked until" v={formatDate(device.paid_until)} />
-              <Row
-                k="Days remaining"
-                v={String(Math.max(0, daysRemaining(device.paid_until)))}
-              />
-            </dl>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <MiniStat icon={<BadgeDollarSign className="h-3.5 w-3.5" />} label="Balance" value={formatMoney(device.balance)} />
+                <MiniStat icon={<Wallet className="h-3.5 w-3.5" />} label="Total paid" value={formatMoney(device.amount_paid)} />
+                <MiniStat icon={<CalendarDays className="h-3.5 w-3.5" />} label="Paid until" value={formatDate(device.paid_until)} />
+              </div>
 
-            <p className="mt-4 text-xs text-muted-foreground">
-              {device.lock_message ||
-                (device.locked
-                  ? "Make a payment to restore access to your phone."
-                  : "Keep paying on time to keep your phone unlocked.")}
-            </p>
+              <p className="mt-4 rounded-lg bg-secondary px-3 py-2.5 text-xs text-secondary-foreground">
+                {device.lock_message ||
+                  (device.locked
+                    ? "Make a payment to restore access to your phone."
+                    : "Keep paying on time to keep your phone unlocked.")}
+              </p>
+            </div>
           </section>
 
-          <section className="mx-5 mt-4 rounded-2xl border border-border p-5">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <Smartphone className="h-4 w-4" /> Pay with mobile money
+          <section className="mx-5 mt-4 rounded-2xl border border-border bg-card p-5">
+            <h3 className="flex items-center gap-1.5 font-display text-sm font-semibold">
+              <Smartphone className="h-4 w-4 text-brand" /> Pay with mobile money
             </h3>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 grid grid-cols-4 gap-2">
               {presets.map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => setAmount(String(Math.round(p.value)))}
-                  className={`rounded-full border px-3 py-1.5 text-xs ${
+                  className={`rounded-lg border px-2 py-2 text-xs font-medium transition ${
                     Number(amount) === Math.round(p.value)
-                      ? "border-brand bg-brand-soft"
-                      : "border-border"
+                      ? "border-brand bg-brand-soft text-navy"
+                      : "border-border text-muted-foreground"
                   }`}
                 >
                   {p.label}
@@ -240,7 +249,7 @@ function Home() {
                 value={payPhone}
                 onChange={(e) => setPayPhone(e.target.value)}
                 placeholder="Mobile money number e.g. 0770123456"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
               />
               <input
                 type="number"
@@ -249,12 +258,12 @@ function Home() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Amount (UGX)"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
               />
               <button
                 type="submit"
                 disabled={!!pending}
-                className="w-full rounded-full bg-brand py-3.5 font-semibold tracking-wide text-brand-foreground disabled:opacity-60"
+                className="w-full rounded-xl bg-brand py-3.5 font-display text-sm font-semibold tracking-wide text-brand-foreground disabled:opacity-60"
               >
                 {pending ? "WAITING FOR APPROVAL…" : `PAY ${formatMoney(Number(amount) || 0)}`}
               </button>
@@ -271,11 +280,13 @@ function Home() {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
+function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex justify-between py-2.5">
-      <dt className="text-muted-foreground">{k}</dt>
-      <dd className="font-medium">{v}</dd>
+    <div className="rounded-xl border border-border bg-background p-3">
+      <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+        {icon} {label}
+      </p>
+      <p className="mt-1 truncate font-display text-sm font-semibold">{value}</p>
     </div>
   );
 }
