@@ -35,7 +35,7 @@ jobs:
 
       - name: Compute device-owner provisioning checksum
         run: |
-          APK=app/build/outputs/apk/release/app-release-unsigned.apk
+          APK=app/build/outputs/apk/debug/app-debug.apk
           echo "PACKAGE_CHECKSUM=$(openssl dgst -binary -sha256 "$APK" | openssl base64 | tr '+/' '-_' | tr -d '=')" | tee checksum.txt
 
       - name: Upload APKs

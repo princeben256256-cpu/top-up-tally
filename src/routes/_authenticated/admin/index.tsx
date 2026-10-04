@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, ShieldCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { listDevices, createDevice, getMyRole } from "@/lib/devices.functions";
+import { listDevices, createDevice, getMyRole, getAgentSettings, saveAgentSettings } from "@/lib/devices.functions";
 import { isLocked, balanceOf, formatMoney, daysRemaining } from "@/lib/lock";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -127,9 +127,9 @@ function AdminHome() {
             className="mt-4 grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2"
           >
             {[
-              ["customer_name", "Customer name", "text"],
-              ["phone_number", "Phone number", "tel"],
               ["imei", "IMEI (14–17 digits)", "text"],
+              ["customer_name", "Customer name (leave empty to stock)", "text"],
+              ["phone_number", "Customer phone (leave empty to stock)", "tel"],
               ["device_model", "Device model", "text"],
               ["total_price", "Total price", "number"],
               ["deposit_paid", "Deposit paid", "number"],
@@ -139,7 +139,7 @@ function AdminHome() {
                 {label}
                 <input
                   type={type}
-                  required={key !== "device_model"}
+                  required={!["device_model", "customer_name", "phone_number", "deposit_paid"].includes(key)}
                   value={(form as any)[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                   className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring"
@@ -158,6 +158,8 @@ function AdminHome() {
           </form>
         )}
 
+        {roleData?.role === "admin" && <AgentSetup />}
+
         <div className="mt-6 divide-y divide-border rounded-xl border border-border">
           {isLoading && <p className="p-5 text-sm text-muted-foreground">Loading devices…</p>}
           {!isLoading && filtered.length === 0 && (
@@ -172,9 +174,11 @@ function AdminHome() {
                 className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-accent/50"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{d.customer_name}</p>
+                  <p className="truncate text-sm font-medium">
+                    {d.customer_name || <span className="text-primary">In stock · {d.device_model || "phone"}</span>}
+                  </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {d.phone_number} · IMEI {d.imei}
+                    {d.phone_number ? `${d.phone_number} · ` : ""}IMEI {d.imei}
                   </p>
                 </div>
                 <div className="text-right">
@@ -194,5 +198,63 @@ function AdminHome() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AgentSetup() {
+  const getFn = useServerFn(getAgentSettings);
+  const saveFn = useServerFn(saveAgentSettings);
+  const qc = useQueryClient();
+  const { data } = useQuery({ queryKey: ["agent-settings"], queryFn: () => getFn({}) });
+  const [url, setUrl] = useState<string | null>(null);
+  const [sum, setSum] = useState<string | null>(null);
+  const save = useMutation({
+    mutationFn: () =>
+      saveFn({ data: { agent_apk_url: url ?? data?.agent_apk_url ?? "", agent_checksum: sum ?? data?.agent_checksum ?? "" } }),
+    onSuccess: () => {
+      toast.success("Lock app saved — every phone now gets a setup QR");
+      qc.invalidateQueries({ queryKey: ["agent-settings"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const ready = !!data?.agent_apk_url && !!data?.agent_checksum;
+  return (
+    <details className="mt-4 rounded-xl border border-border p-4" open={!ready}>
+      <summary className="cursor-pointer text-sm font-semibold">
+        Lock app setup (one time) {ready ? "· ready" : "· needed"}
+      </summary>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Paste the download link of the lock app and the code from checksum.txt. You only do this once.
+      </p>
+      <form
+        className="mt-3 grid gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          save.mutate();
+        }}
+      >
+        <input
+          required
+          type="url"
+          placeholder="https://…/app-release.apk"
+          value={url ?? data?.agent_apk_url ?? ""}
+          onChange={(e) => setUrl(e.target.value)}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+        />
+        <input
+          required
+          placeholder="Checksum (letters after PACKAGE_CHECKSUM=)"
+          value={sum ?? data?.agent_checksum ?? ""}
+          onChange={(e) => setSum(e.target.value.replace(/^PACKAGE_CHECKSUM=/, ""))}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+        />
+        <button
+          disabled={save.isPending}
+          className="rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+        >
+          Save
+        </button>
+      </form>
+    </details>
   );
 }

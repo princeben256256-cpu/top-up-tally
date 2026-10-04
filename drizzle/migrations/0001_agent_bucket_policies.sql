@@ -1,0 +1,2 @@
+CREATE POLICY "admin upload agent apk" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'agent' AND public.has_role(auth.uid(),'admin'));
+CREATE POLICY "admin update agent apk" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'agent' AND public.has_role(auth.uid(),'admin'));

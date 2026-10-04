@@ -6,8 +6,8 @@ const idSchema = z.object({ id: z.string().uuid() });
 
 const createSchema = z.object({
   imei: z.string().trim().regex(/^[0-9]{14,17}$/, "IMEI must be 14–17 digits"),
-  phone_number: z.string().trim().min(7).max(20),
-  customer_name: z.string().trim().min(2).max(100),
+  phone_number: z.string().trim().max(20).optional().default(""),
+  customer_name: z.string().trim().max(100).optional().default(""),
   device_model: z.string().trim().max(80).optional(),
   total_price: z.number().min(0).max(100_000_000),
   deposit_paid: z.number().min(0).max(100_000_000),
@@ -93,3 +93,47 @@ export const lookupDevice = createServerFn({ method: "POST" })
     return lookupDevicePublic(data.query);
   });
 
+
+const assignSchema = z.object({
+  device_id: z.string().uuid(),
+  customer_name: z.string().trim().min(2).max(100),
+  phone_number: z.string().trim().min(7).max(20),
+  deposit_paid: z.number().min(0).max(100_000_000),
+});
+
+export const assignCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => assignSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const { assignCustomerFor } = await import("./devices.server");
+    return assignCustomerFor(context.supabase as never, data);
+  });
+
+export const getAgentSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("app_settings")
+      .select("agent_apk_url, agent_checksum")
+      .eq("id", 1)
+      .maybeSingle();
+    return { agent_apk_url: data?.agent_apk_url ?? "", agent_checksum: data?.agent_checksum ?? "" };
+  });
+
+export const saveAgentSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        agent_apk_url: z.string().trim().url().max(500),
+        agent_checksum: z.string().trim().regex(/^[A-Za-z0-9_-]{40,60}$/, "Checksum looks wrong"),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("app_settings")
+      .upsert({ id: 1, ...data, updated_at: new Date().toISOString() });
+    if (error) throw new Error("Only admins can change these settings");
+    return { ok: true };
+  });

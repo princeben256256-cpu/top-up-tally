@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          agent_apk_url: string | null
+          agent_checksum: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          agent_apk_url?: string | null
+          agent_checksum?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_apk_url?: string | null
+          agent_checksum?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           amount_paid: number
@@ -39,7 +60,7 @@ export type Database = {
           amount_paid?: number
           created_at?: string
           created_by?: string | null
-          customer_name: string
+          customer_name?: string
           daily_rate?: number
           deposit_paid?: number
           device_model?: string | null
@@ -51,7 +72,7 @@ export type Database = {
           lock_message?: string | null
           lock_override?: string
           paid_until?: string
-          phone_number: string
+          phone_number?: string
           total_price?: number
           updated_at?: string
         }
