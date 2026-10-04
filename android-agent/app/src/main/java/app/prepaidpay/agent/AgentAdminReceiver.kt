@@ -18,6 +18,10 @@ class AgentAdminReceiver : DeviceAdminReceiver() {
         DeviceOwner.applyBaselinePolicies(context)
         HeartbeatWorker.schedule(context)
 
+        if (AutoEnroll.fromIntent(context, intent) || Prefs.isEnrolled(context)) {
+            if (Prefs.shouldLock(context)) HeartbeatWorker.showLock(context)
+            return
+        }
         val launch = Intent(context, EnrollActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(launch)
