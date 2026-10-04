@@ -48,11 +48,10 @@ function CustomerConsole() {
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function load(q: string) {
     setState("loading");
     try {
-      const result = await lookup({ data: { query } });
+      const result = await lookup({ data: { query: q } });
       if (!result) {
         setDevice(null);
         setState("empty");
@@ -65,6 +64,21 @@ function CustomerConsole() {
     } catch {
       setState("empty");
     }
+  }
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(LAST_QUERY);
+    if (saved) {
+      setQuery(saved);
+      void load(saved);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    window.localStorage.setItem(LAST_QUERY, query);
+    await load(query);
   }
 
   async function refresh(deviceId: string) {
