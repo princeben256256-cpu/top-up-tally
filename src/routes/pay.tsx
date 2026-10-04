@@ -11,13 +11,13 @@ import { formatDate, formatMoney, daysRemaining } from "../lib/lock";
 export const Route = createFileRoute("/pay")({
   head: () => ({
     meta: [
-      { title: "PrepaidPay — Check your phone payment plan" },
+      { title: "My Device — PrepaidPay customer console" },
       {
         name: "description",
         content:
           "Enter your IMEI or phone number to see your balance, next due date and pay by mobile money to unlock your device.",
       },
-      { property: "og:title", content: "PrepaidPay — Check your phone payment plan" },
+      { property: "og:title", content: "My Device — PrepaidPay customer console" },
       {
         property: "og:description",
         content: "Check your balance, next due date and pay by mobile money to keep your phone unlocked.",
@@ -26,10 +26,12 @@ export const Route = createFileRoute("/pay")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Home,
+  component: CustomerConsole,
 });
 
-function Home() {
+const LAST_QUERY = "prepaidpay:last-query";
+
+function CustomerConsole() {
   const lookup = useServerFn(lookupDevice);
   const startPay = useServerFn(startMobileMoneyPayment);
   const checkPay = useServerFn(checkMobileMoneyPayment);
