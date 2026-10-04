@@ -9,26 +9,26 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
-import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
+import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -41,17 +41,17 @@ const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   path: '/admin/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
-  id: '/api/public/iotec/callback',
-  path: '/api/public/iotec/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicDeviceHeartbeatRoute =
   ApiPublicDeviceHeartbeatRouteImport.update({
     id: '/api/public/device/heartbeat',
     path: '/api/public/device/heartbeat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
+  id: '/api/public/iotec/callback',
+  path: '/api/public/iotec/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,11 +117,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -131,11 +131,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -152,18 +152,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/iotec/callback': {
-      id: '/api/public/iotec/callback'
-      path: '/api/public/iotec/callback'
-      fullPath: '/api/public/iotec/callback'
-      preLoaderRoute: typeof ApiPublicIotecCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/device/heartbeat': {
       id: '/api/public/device/heartbeat'
       path: '/api/public/device/heartbeat'
       fullPath: '/api/public/device/heartbeat'
       preLoaderRoute: typeof ApiPublicDeviceHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/iotec/callback': {
+      id: '/api/public/iotec/callback'
+      path: '/api/public/iotec/callback'
+      fullPath: '/api/public/iotec/callback'
+      preLoaderRoute: typeof ApiPublicIotecCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
