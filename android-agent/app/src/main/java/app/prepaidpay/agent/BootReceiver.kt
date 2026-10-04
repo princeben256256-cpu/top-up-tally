@@ -9,6 +9,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
         DeviceOwner.applyBaselinePolicies(context)
         HeartbeatWorker.schedule(context)
+        KeepAliveService.start(context)
         if (Prefs.shouldLock(context)) HeartbeatWorker.showLock(context)
     }
 }

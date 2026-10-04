@@ -71,6 +71,7 @@ class EnrollActivity : AppCompatActivity() {
                         Prefs.enroll(this@EnrollActivity, imei, secret)
                         Prefs.saveStatus(this@EnrollActivity, status)
                         HeartbeatWorker.schedule(this@EnrollActivity)
+                        KeepAliveService.start(this@EnrollActivity)
                         Toast.makeText(
                             this@EnrollActivity,
                             "Enrolled for ${status.customerName}",

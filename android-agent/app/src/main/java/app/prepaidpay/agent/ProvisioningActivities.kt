@@ -22,6 +22,7 @@ object AutoEnroll {
         if (!imei.matches(Regex("^[0-9]{14,17}$")) || secret.length < 16) return false
         Prefs.enroll(context, imei, secret)
         HeartbeatWorker.schedule(context)
+        KeepAliveService.start(context)
         return true
     }
 }
