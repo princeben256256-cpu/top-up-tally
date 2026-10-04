@@ -39,8 +39,8 @@ export async function createDeviceFor(
   userId: string,
   input: {
     imei: string;
-    phone_number: string;
-    customer_name: string;
+    phone_number?: string;
+    customer_name?: string;
     device_model?: string;
     total_price: number;
     deposit_paid: number;
@@ -52,8 +52,8 @@ export async function createDeviceFor(
     .from("devices")
     .insert({
       imei: input.imei.trim(),
-      phone_number: input.phone_number.trim(),
-      customer_name: input.customer_name.trim(),
+      phone_number: (input.phone_number ?? "").trim(),
+      customer_name: (input.customer_name ?? "").trim(),
       device_model: input.device_model?.trim() || null,
       total_price: input.total_price,
       deposit_paid: input.deposit_paid,
@@ -114,6 +114,35 @@ export async function recordPaymentFor(
   return { days_added: days, paid_until: nextPaidUntil.toISOString() };
 }
 
+/** Hand an in-stock phone to a customer: deposit starts their paid time from today. */
+export async function assignCustomerFor(
+  client: AnyClient,
+  input: { device_id: string; customer_name: string; phone_number: string; deposit_paid: number },
+) {
+  const { data: device, error } = await client
+    .from("devices")
+    .select("id, daily_rate, customer_name")
+    .eq("id", input.device_id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!device) throw new Error("Device not found");
+  if (device.customer_name) throw new Error("This phone already has a customer");
+  const days = daysForAmount(input.deposit_paid, Number(device.daily_rate));
+  const { error: updErr } = await client
+    .from("devices")
+    .update({
+      customer_name: input.customer_name.trim(),
+      phone_number: input.phone_number.trim(),
+      deposit_paid: input.deposit_paid,
+      amount_paid: input.deposit_paid,
+      paid_until: addDays(new Date(), days).toISOString(),
+      lock_override: "auto",
+    })
+    .eq("id", input.device_id);
+  if (updErr) throw new Error(updErr.message);
+  return { days_added: days };
+}
+
 export async function setLockFor(
   client: AnyClient,
   input: { device_id: string; lock_override: string; lock_message?: string },
@@ -137,6 +166,7 @@ function normalizeQuery(q: string) {
 export async function lookupDevicePublic(query: string) {
   const q = normalizeQuery(query);
   if (q.length < 6) return null;
+  // in-stock phones (no customer yet) are never shown publicly
 
   const { data, error } = await supabaseAdmin
     .from("devices")
@@ -146,7 +176,7 @@ export async function lookupDevicePublic(query: string) {
     .or(`imei.eq.${q},phone_number.eq.${q}`)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) return null;
+  if (!data || !data.customer_name) return null;
 
   return {
     ...data,
