@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PayRouteImport } from './routes/pay'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -18,6 +19,11 @@ import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticate
 import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayRoute = PayRouteImport.update({
   id: '/pay',
   path: '/pay',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pay': typeof PayRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pay': typeof PayRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/pay': typeof PayRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pay'
+    | '/reset-password'
     | '/admin/$id'
     | '/admin/'
     | '/api/public/device/heartbeat'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pay'
+    | '/reset-password'
     | '/admin/$id'
     | '/admin'
     | '/api/public/device/heartbeat'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/pay'
+    | '/reset-password'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/'
     | '/api/public/device/heartbeat'
@@ -124,12 +136,20 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   PayRoute: typeof PayRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicDeviceHeartbeatRoute: typeof ApiPublicDeviceHeartbeatRoute
   ApiPublicIotecCallbackRoute: typeof ApiPublicIotecCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pay': {
       id: '/pay'
       path: '/pay'
@@ -207,6 +227,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   PayRoute: PayRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicDeviceHeartbeatRoute: ApiPublicDeviceHeartbeatRoute,
   ApiPublicIotecCallbackRoute: ApiPublicIotecCallbackRoute,
 }
