@@ -141,6 +141,16 @@ function AuthPage() {
           Continue with Google
         </button>
 
+        {mode === "signin" && (
+          <button
+            onClick={sendReset}
+            className="mt-2 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+          >
+            Forgot password? Send me a new-password link
+          </button>
+        )}
+
+
         <button
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
           className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground"
