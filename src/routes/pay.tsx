@@ -37,7 +37,7 @@ function CustomerConsole() {
   const checkPay = useServerFn(checkMobileMoneyPayment);
 
   const [query, setQuery] = useState("");
-  const [state, setState] = useState<"idle" | "loading" | "empty" | "found">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "empty" | "instock" | "error" | "found">("idle");
   const [device, setDevice] = useState<any>(null);
 
   const [amount, setAmount] = useState("");
@@ -49,21 +49,29 @@ function CustomerConsole() {
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   async function load(q: string) {
+    const clean = q.replace(/\s+/g, "");
+    if (clean.length < 6) {
+      setState("empty");
+      return;
+    }
     setState("loading");
     try {
-      const result = await lookup({ data: { query: q } });
+      const result: any = await lookup({ data: { query: clean } });
       if (!result) {
         setDevice(null);
         setState("empty");
+      } else if (result.in_stock) {
+        setDevice(null);
+        setState("instock");
       } else {
         setDevice(result);
-        window.localStorage.setItem(LAST_QUERY, result.imei ?? q);
+        window.localStorage.setItem(LAST_QUERY, result.imei ?? clean);
         setPayPhone(result.phone_number ?? "");
-        setAmount(String(Math.min(Number(result.balance) || 0, Number(result.daily_rate) * 7)));
+        setAmount(String(Math.min(Number(result.balance) || 0, Number(result.daily_rate) || 0)));
         setState("found");
       }
     } catch {
-      setState("empty");
+      setState("error");
     }
   }
 
@@ -202,9 +210,43 @@ function CustomerConsole() {
       </>)}
 
       {state === "empty" && (
-        <p className="mt-6 px-5 text-center text-sm text-muted-foreground">
-          No device found for that IMEI or phone number.
-        </p>
+        <Notice
+          title="We couldn't find that phone"
+          body="Check the number and try again. Use IMEI 1 (dial *#06#) or the phone number the shop registered for you, with no spaces."
+        />
+      )}
+      {state === "instock" && (
+        <Notice
+          title="This phone hasn't been given to a customer yet"
+          body="The shop still needs to add your name and phone number to this device. Please ask the agent who sold you the phone."
+        />
+      )}
+      {state === "error" && (
+        <Notice
+          title="Something went wrong"
+          body="We couldn't check right now. Check your internet and tap CHECK STATUS again."
+        />
+      )}
+
+      {state === "idle" && (
+        <section className="mx-5 mt-6 rounded-2xl border border-border bg-card p-5">
+          <h3 className="font-display text-sm font-semibold">How it works</h3>
+          <ol className="mt-3 space-y-3 text-sm text-muted-foreground">
+            {[
+              "Type your phone's IMEI (dial *#06#) or your registered number.",
+              "See your balance, days left and payment history.",
+              "Pay 1 day, 1 week, 1 month or the full balance with mobile money.",
+              "Your phone unlocks by itself within a few minutes.",
+            ].map((s, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft font-display text-xs font-semibold text-navy">
+                  {i + 1}
+                </span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
       {state === "found" && device && (
@@ -320,7 +362,16 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
       <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
         {icon} {label}
       </p>
-      <p className="mt-1 truncate font-display text-sm font-semibold">{value}</p>
+      <p className="mt-1 break-words font-display text-[13px] font-semibold leading-tight">{value}</p>
     </div>
+  );
+}
+
+function Notice({ title, body }: { title: string; body: string }) {
+  return (
+    <section className="mx-5 mt-6 rounded-2xl border border-border bg-card p-5">
+      <h3 className="font-display text-sm font-semibold">{title}</h3>
+      <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
+    </section>
   );
 }
