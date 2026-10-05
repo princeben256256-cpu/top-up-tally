@@ -9,24 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PayRouteImport } from './routes/pay'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PayRouteImport } from './routes/pay'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
-import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
+import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PayRoute = PayRouteImport.update({
-  id: '/pay',
-  path: '/pay',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -34,13 +33,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const PayRoute = PayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -53,17 +53,17 @@ const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   path: '/admin/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
-  id: '/api/public/iotec/callback',
-  path: '/api/public/iotec/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicDeviceHeartbeatRoute =
   ApiPublicDeviceHeartbeatRouteImport.update({
     id: '/api/public/device/heartbeat',
     path: '/api/public/device/heartbeat',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
+  id: '/api/public/iotec/callback',
+  path: '/api/public/iotec/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,25 +143,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pay': {
-      id: '/pay'
-      path: '/pay'
-      fullPath: '/pay'
-      preLoaderRoute: typeof PayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -171,11 +157,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay': {
+      id: '/pay'
+      path: '/pay'
+      fullPath: '/pay'
+      preLoaderRoute: typeof PayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -192,18 +192,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/iotec/callback': {
-      id: '/api/public/iotec/callback'
-      path: '/api/public/iotec/callback'
-      fullPath: '/api/public/iotec/callback'
-      preLoaderRoute: typeof ApiPublicIotecCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/device/heartbeat': {
       id: '/api/public/device/heartbeat'
       path: '/api/public/device/heartbeat'
       fullPath: '/api/public/device/heartbeat'
       preLoaderRoute: typeof ApiPublicDeviceHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/iotec/callback': {
+      id: '/api/public/iotec/callback'
+      path: '/api/public/iotec/callback'
+      fullPath: '/api/public/iotec/callback'
+      preLoaderRoute: typeof ApiPublicIotecCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
