@@ -38,14 +38,15 @@ object DeviceOwner {
             dpm.setStatusBarDisabled(admin, false)
 
             // Extra anti-bypass: no clock cheating, no sideloaded "unlock" tools,
-            // no network reset, no USB file tricks.
+            // no network reset. USB file transfer and airplane mode are left open
+            // so the customer keeps the full phone experience.
             dpm.addUserRestriction(admin, UserManager.DISALLOW_CONFIG_DATE_TIME)
             dpm.addUserRestriction(admin, UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES)
             dpm.addUserRestriction(admin, UserManager.DISALLOW_NETWORK_RESET)
             dpm.setAutoTimeRequired(admin, true)
 
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
                 dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
             }
         }
