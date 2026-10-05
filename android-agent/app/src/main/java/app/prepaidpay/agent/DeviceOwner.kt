@@ -48,9 +48,6 @@ object DeviceOwner {
                 // Stops hiding offline in airplane mode to dodge the lock.
                 dpm.addUserRestriction(admin, UserManager.DISALLOW_AIRPLANE_MODE)
             }
-            // Customer may ADD their Google account, but the shop account
-            // must never be removed while the phone is unpaid.
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_REMOVE_MANAGED_PROFILE)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
