@@ -37,7 +37,7 @@ function CustomerConsole() {
   const checkPay = useServerFn(checkMobileMoneyPayment);
 
   const [query, setQuery] = useState("");
-  const [state, setState] = useState<"idle" | "loading" | "empty" | "found">("idle");
+  const [state, setState] = useState<"idle" | "loading" | "empty" | "instock" | "error" | "found">("idle");
   const [device, setDevice] = useState<any>(null);
 
   const [amount, setAmount] = useState("");
@@ -49,21 +49,29 @@ function CustomerConsole() {
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   async function load(q: string) {
+    const clean = q.replace(/\s+/g, "");
+    if (clean.length < 6) {
+      setState("empty");
+      return;
+    }
     setState("loading");
     try {
-      const result = await lookup({ data: { query: q } });
+      const result: any = await lookup({ data: { query: clean } });
       if (!result) {
         setDevice(null);
         setState("empty");
+      } else if (result.in_stock) {
+        setDevice(null);
+        setState("instock");
       } else {
         setDevice(result);
-        window.localStorage.setItem(LAST_QUERY, result.imei ?? q);
+        window.localStorage.setItem(LAST_QUERY, result.imei ?? clean);
         setPayPhone(result.phone_number ?? "");
-        setAmount(String(Math.min(Number(result.balance) || 0, Number(result.daily_rate) * 7)));
+        setAmount(String(Math.min(Number(result.balance) || 0, Number(result.daily_rate) || 0)));
         setState("found");
       }
     } catch {
-      setState("empty");
+      setState("error");
     }
   }
 
