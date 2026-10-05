@@ -21,6 +21,11 @@ class KeepAliveService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    private val scope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO
+    )
+    private var loop: kotlinx.coroutines.Job? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundWithNotification()
         // Re-apply hardening and make sure the heartbeat is scheduled — this
@@ -28,7 +33,34 @@ class KeepAliveService : Service() {
         DeviceOwner.applyBaselinePolicies(this)
         HeartbeatWorker.schedule(this)
         if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
+        startFastLoop()
         return START_STICKY
+    }
+
+    /** Check with the server every 20 seconds so force-lock / payments act fast. */
+    private fun startFastLoop() {
+        if (loop?.isActive == true) return
+        loop = scope.launch {
+            while (true) {
+                val imei = Prefs.imei(this@KeepAliveService)
+                val secret = Prefs.secret(this@KeepAliveService)
+                if (!imei.isNullOrBlank() && !secret.isNullOrBlank()) {
+                    val status = runCatching { Api.heartbeat(imei, secret) }.getOrNull()
+                    if (status != null) Prefs.saveStatus(this@KeepAliveService, status)
+                    if (Prefs.shouldLock(this@KeepAliveService)) {
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            HeartbeatWorker.showLock(this@KeepAliveService)
+                        }
+                    }
+                }
+                kotlinx.coroutines.delay(20_000)
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     private fun startForegroundWithNotification() {

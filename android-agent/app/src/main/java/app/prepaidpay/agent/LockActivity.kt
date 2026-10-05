@@ -36,7 +36,7 @@ class LockActivity : AppCompatActivity() {
         // Keep polling so a payment unlocks within seconds, not 15 minutes.
         lifecycleScope.launch {
             while (true) {
-                delay(30_000)
+                delay(15_000)
                 refreshNow()
             }
         }

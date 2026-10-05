@@ -11,8 +11,8 @@ android {
         applicationId = "app.prepaidpay.agent"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
         // Change this if you connect a custom domain later.
         buildConfigField("String", "API_BASE", "\"https://top-up-tally.lovable.app\"")
     }
@@ -20,6 +20,16 @@ android {
     buildFeatures {
         buildConfig = true
         viewBinding = false
+    }
+
+    // Fixed key so every build has the same signature and can update in place.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("fixed-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
