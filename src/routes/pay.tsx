@@ -366,3 +366,12 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
+
+function Notice({ title, body }: { title: string; body: string }) {
+  return (
+    <section className="mx-5 mt-6 rounded-2xl border border-border bg-card p-5">
+      <h3 className="font-display text-sm font-semibold">{title}</h3>
+      <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
+    </section>
+  );
+}
