@@ -37,6 +37,18 @@ object DeviceOwner {
             dpm.setUninstallBlocked(admin, context.packageName, true)
             dpm.setStatusBarDisabled(admin, false)
 
+            // Extra anti-bypass: no clock cheating, no sideloaded "unlock" tools,
+            // no network reset, no USB file tricks.
+            dpm.addUserRestriction(admin, UserManager.DISALLOW_CONFIG_DATE_TIME)
+            dpm.addUserRestriction(admin, UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES)
+            dpm.addUserRestriction(admin, UserManager.DISALLOW_NETWORK_RESET)
+            dpm.addUserRestriction(admin, UserManager.DISALLOW_USB_FILE_TRANSFER)
+            dpm.setAutoTimeRequired(admin, true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                // Stops hiding offline in airplane mode to dodge the lock.
+                dpm.addUserRestriction(admin, UserManager.DISALLOW_AIRPLANE_MODE)
+            }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
             }
