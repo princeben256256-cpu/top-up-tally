@@ -15,6 +15,13 @@
       "when": 1791092612229,
       "tag": "0001_agent_bucket_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791191300408,
+      "tag": "0002_seed_and_grant_app_settings",
+      "breakpoints": true
     }
   ]
 }
