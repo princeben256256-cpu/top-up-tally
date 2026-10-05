@@ -362,7 +362,7 @@ function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string
       <p className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
         {icon} {label}
       </p>
-      <p className="mt-1 truncate font-display text-sm font-semibold">{value}</p>
+      <p className="mt-1 break-words font-display text-[13px] font-semibold leading-tight">{value}</p>
     </div>
   );
 }
