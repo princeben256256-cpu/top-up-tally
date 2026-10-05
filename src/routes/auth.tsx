@@ -60,6 +60,22 @@ function AuthPage() {
     }
   }
 
+  async function sendReset() {
+    const target = email.trim();
+    if (!target) {
+      toast.error("Type your email first, then tap the link.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Check your email — tap the link to choose a new password.");
+  }
+
   async function signInWithGoogle() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
