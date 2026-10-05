@@ -176,7 +176,9 @@ export async function lookupDevicePublic(query: string) {
     .or(`imei.eq.${q},phone_number.eq.${q}`)
     .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data || !data.customer_name) return null;
+  if (!data) return null;
+  // phone still in the shop (no customer yet): say so, but reveal nothing else
+  if (!data.customer_name) return { in_stock: true as const };
 
   return {
     ...data,
