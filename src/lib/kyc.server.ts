@@ -20,28 +20,70 @@ Return ONLY JSON: {"is_ugandan_national_id":bool,"side":"front"|"back"|"unknown"
 export async function checkIdImage(dataUrl: string, expectedSide: "front" | "back"): Promise<IdCheck> {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("ID checking is not configured");
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["is_ugandan_national_id", "side", "looks_original", "nin", "name", "reason"],
+    properties: {
+      is_ugandan_national_id: { type: "boolean" },
+      side: { type: "string", enum: ["front", "back", "unknown"] },
+      looks_original: { type: "boolean" },
+      nin: { type: ["string", "null"] },
+      name: { type: ["string", "null"] },
+      reason: { type: "string" },
+    },
+  };
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
     method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+    headers: {
+      "Lovable-API-Key": key,
+      authorization: `Bearer ${key}`,
+      "content-type": "application/json",
+      "X-Lovable-AIG-SDK": "fetch",
+    },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: PROMPT },
+      model: "openai/gpt-6-astra",
+      stream: true,
+      store: false,
+      reasoning: { effort: "low" },
+      instructions: PROMPT,
+      input: [
         {
           role: "user",
           content: [
-            { type: "text", text: `This should be the ${expectedSide} of the card.` },
-            { type: "image_url", image_url: { url: dataUrl } },
+            { type: "input_text", text: `This should be the ${expectedSide} of the card. Reply in json.` },
+            { type: "input_image", image_url: dataUrl },
           ],
         },
       ],
+      text: { format: { type: "json_schema", name: "id_check", strict: true, schema } },
     }),
   });
   if (res.status === 429) throw new Error("Too many ID checks right now — wait a minute and retry");
   if (res.status === 402) throw new Error("ID checking credits are used up — top up AI credits");
-  if (!res.ok) throw new Error(`ID check failed [${res.status}]`);
-  const json = await res.json();
-  const text: string = json?.choices?.[0]?.message?.content ?? "";
+  if (!res.ok || !res.body) throw new Error(`ID check failed [${res.status}]`);
+  let text = "";
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split("\n");
+    buf = lines.pop() ?? "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const d = line.slice(5).trim();
+      if (!d || d === "[DONE]") continue;
+      try {
+        const ev = JSON.parse(d);
+        if (ev.type === "response.output_text.delta") text += ev.delta ?? "";
+      } catch {
+        /* ignore */
+      }
+    }
+  }
   const m = text.match(/\{[\s\S]*\}/);
   let p: any = {};
   try {
