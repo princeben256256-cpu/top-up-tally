@@ -16,6 +16,7 @@ import { Route as PayRouteImport } from './routes/pay'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAdminIdRouteImport } from './routes/_authenticated/admin/$id'
+import { Route as AuthenticatedAdminRegisterIdRouteImport } from './routes/_authenticated/admin/register.$id'
 import { Route as ApiPublicDeviceHeartbeatRouteImport } from './routes/api/public/device/heartbeat'
 import { Route as ApiPublicIotecCallbackRouteImport } from './routes/api/public/iotec/callback'
 
@@ -53,6 +54,12 @@ const AuthenticatedAdminIdRoute = AuthenticatedAdminIdRouteImport.update({
   path: '/admin/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRegisterIdRoute =
+  AuthenticatedAdminRegisterIdRouteImport.update({
+    id: '/admin/register/$id',
+    path: '/admin/register/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicDeviceHeartbeatRoute =
   ApiPublicDeviceHeartbeatRouteImport.update({
     id: '/api/public/device/heartbeat',
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/register/$id': typeof AuthenticatedAdminRegisterIdRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
   '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
@@ -82,6 +90,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/register/$id': typeof AuthenticatedAdminRegisterIdRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
   '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
@@ -94,6 +103,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/register/$id': typeof AuthenticatedAdminRegisterIdRoute
   '/api/public/device/heartbeat': typeof ApiPublicDeviceHeartbeatRoute
   '/api/public/iotec/callback': typeof ApiPublicIotecCallbackRoute
 }
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/$id'
     | '/admin/'
+    | '/admin/register/$id'
     | '/api/public/device/heartbeat'
     | '/api/public/iotec/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/admin/$id'
     | '/admin'
+    | '/admin/register/$id'
     | '/api/public/device/heartbeat'
     | '/api/public/iotec/callback'
   id:
@@ -127,6 +139,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/admin/$id'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/register/$id'
     | '/api/public/device/heartbeat'
     | '/api/public/iotec/callback'
   fileRoutesById: FileRoutesById
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/register/$id': {
+      id: '/_authenticated/admin/register/$id'
+      path: '/admin/register/$id'
+      fullPath: '/admin/register/$id'
+      preLoaderRoute: typeof AuthenticatedAdminRegisterIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/device/heartbeat': {
       id: '/api/public/device/heartbeat'
       path: '/api/public/device/heartbeat'
@@ -212,11 +232,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminIdRoute: typeof AuthenticatedAdminIdRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminRegisterIdRoute: typeof AuthenticatedAdminRegisterIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminIdRoute: AuthenticatedAdminIdRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminRegisterIdRoute: AuthenticatedAdminRegisterIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
