@@ -36,6 +36,13 @@
       "when": 1791273767942,
       "tag": "0004_customer_kyc",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791295204533,
+      "tag": "0005_agents_admin_only",
+      "breakpoints": true
     }
   ]
 }
