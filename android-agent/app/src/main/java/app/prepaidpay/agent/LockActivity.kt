@@ -31,7 +31,8 @@ class LockActivity : AppCompatActivity() {
         findViewById<Button>(R.id.refresh).setOnClickListener { refreshNow() }
         findViewById<Button>(R.id.pay).setOnClickListener {
             PayActivity.open = true
-            startActivity(Intent(this, PayActivity::class.java))
+            runCatching { startActivity(Intent(this, PayActivity::class.java)) }
+                .onFailure { PayActivity.open = false }
         }
         findViewById<Button>(R.id.emergency).setOnClickListener {
             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
