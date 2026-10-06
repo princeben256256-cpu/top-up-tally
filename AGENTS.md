@@ -11,3 +11,4 @@
 
 - Customer KYC (photos, ID scans, signature) lives in customer_kyc + private "kyc" bucket, written only by a staff-checked server function that re-verifies IDs with AI — never trust client checks.
 - Deposits reduce the balance but never add paid days; only later payments buy days.
+- Lock app: never show/relaunch the lock while the screen is off or the pay page/emergency dialer is open; it appears on screen-on instead. Why: lets the phone sleep and keeps payment uninterrupted.
