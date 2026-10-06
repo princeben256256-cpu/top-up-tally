@@ -134,6 +134,7 @@ export type Database = {
           enrollment_secret: string
           id: string
           imei: string
+          imei2: string | null
           last_seen_at: string | null
           lock_message: string | null
           lock_override: string
@@ -154,6 +155,7 @@ export type Database = {
           enrollment_secret?: string
           id?: string
           imei: string
+          imei2?: string | null
           last_seen_at?: string | null
           lock_message?: string | null
           lock_override?: string
@@ -174,6 +176,7 @@ export type Database = {
           enrollment_secret?: string
           id?: string
           imei?: string
+          imei2?: string | null
           last_seen_at?: string | null
           lock_message?: string | null
           lock_override?: string
