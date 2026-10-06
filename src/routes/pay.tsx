@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Search, Lock, ShieldCheck, Smartphone, Wallet, CalendarDays, BadgeDollarSign } from "lucide-react";
+import { Search, Lock, ShieldCheck, Smartphone, Wallet, CalendarDays, BadgeDollarSign, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "../components/AppShell";
 import { lookupDevice } from "../lib/devices.functions";
@@ -45,6 +45,8 @@ function CustomerConsole() {
   const [pending, setPending] = useState<null | { external_id: string }>(null);
   const [payStatus, setPayStatus] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
@@ -91,10 +93,23 @@ function CustomerConsole() {
   }
 
   async function refresh(deviceId: string) {
-    const fresh = await lookup({ data: { query: device?.imei ?? query } });
-    if (fresh) setDevice(fresh);
+    try {
+      const fresh: any = await lookup({ data: { query: device?.imei ?? query } });
+      if (fresh && !fresh.in_stock) setDevice(fresh);
+      setLastChecked(new Date());
+    } catch {
+      /* ignore */
+    }
     void deviceId;
   }
+
+  // Automatic check every 20 seconds while the page is open.
+  useEffect(() => {
+    if (state !== "found" || !device?.imei) return;
+    const t = setInterval(() => void refresh(device.id), 20000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, device?.imei]);
 
   function startPolling(externalId: string) {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -162,23 +177,28 @@ function CustomerConsole() {
   const total = Number(device?.total_price) || 0;
   const paid = Number(device?.amount_paid) || 0;
   const progress = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+  const overdueDays = device
+    ? Math.max(0, Math.ceil((Date.now() - new Date(device.paid_until).getTime()) / 86400000))
+    : 0;
 
   return (
     <AppShell>
       {state === "found" && device ? (
         <div className="flex items-center justify-between px-5 pt-5">
-          <span className="text-xs text-muted-foreground">Signed in to this device</span>
+          <span className="text-xs text-muted-foreground">
+            {lastChecked ? `Updated ${lastChecked.toLocaleTimeString()}` : "My phone"}
+          </span>
           <button
             type="button"
-            onClick={() => {
-              window.localStorage.removeItem(LAST_QUERY);
-              setDevice(null);
-              setQuery("");
-              setState("idle");
+            onClick={async () => {
+              setRefreshing(true);
+              await refresh(device.id);
+              setRefreshing(false);
             }}
-            className="text-xs font-medium text-brand underline"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white"
           >
-            Switch device
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            {refreshing ? "Checking…" : "Refresh"}
           </button>
         </div>
       ) : (<>
@@ -282,10 +302,24 @@ function CustomerConsole() {
                 <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progress}%` }} />
               </div>
 
+              {overdueDays > 0 && Number(device.balance) > 0 && (
+                <div className="mt-4 rounded-xl border border-destructive bg-destructive/10 p-3">
+                  <p className="font-display text-sm font-semibold text-destructive">
+                    {overdueDays} {overdueDays === 1 ? "day" : "days"} not paid
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Pay {formatMoney(Math.min(overdueDays * Number(device.daily_rate), Number(device.balance)))} to clear the missed days.
+                  </p>
+                </div>
+              )}
+
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <MiniStat icon={<BadgeDollarSign className="h-3.5 w-3.5" />} label="Balance" value={formatMoney(device.balance)} />
                 <MiniStat icon={<Wallet className="h-3.5 w-3.5" />} label="Total paid" value={formatMoney(device.amount_paid)} />
                 <MiniStat icon={<CalendarDays className="h-3.5 w-3.5" />} label="Paid until" value={formatDate(device.paid_until)} />
+                <MiniStat icon={<BadgeDollarSign className="h-3.5 w-3.5" />} label="Phone price" value={formatMoney(device.total_price)} />
+                <MiniStat icon={<Wallet className="h-3.5 w-3.5" />} label="Deposit" value={formatMoney(device.deposit_paid)} />
+                <MiniStat icon={<CalendarDays className="h-3.5 w-3.5" />} label="Per day" value={formatMoney(device.daily_rate)} />
               </div>
 
               <p className="mt-4 rounded-lg bg-secondary px-3 py-2.5 text-xs text-secondary-foreground">
