@@ -29,6 +29,13 @@
       "when": 1791191456681,
       "tag": "0003_restore_role_check_execute",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791273767942,
+      "tag": "0004_customer_kyc",
+      "breakpoints": true
     }
   ]
 }
