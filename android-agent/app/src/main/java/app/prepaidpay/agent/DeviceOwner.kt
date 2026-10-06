@@ -47,7 +47,13 @@ object DeviceOwner {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-                dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
+                // Phone/SIM-menu apps are allowed inside the lock so a mobile money
+                // PIN prompt can still appear while the customer pays from a locked phone.
+                dpm.setLockTaskPackages(admin, arrayOf(
+                    context.packageName,
+                    "com.android.phone", "com.android.stk", "com.android.server.telecom",
+                    "com.samsung.android.app.telephonyui", "com.android.dialer",
+                ))
             }
         }
     }

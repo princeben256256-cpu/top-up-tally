@@ -19,6 +19,12 @@ class EnrollActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Once enrolled, the app icon opens the customer's payment page instead.
+        if (Prefs.imei(this) != null && Prefs.secret(this) != null) {
+            startActivity(android.content.Intent(this, PayActivity::class.java))
+            finish()
+            return
+        }
         setContentView(R.layout.activity_enroll)
 
         DeviceOwner.applyBaselinePolicies(this)

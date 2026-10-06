@@ -48,6 +48,12 @@
         </activity>
 
         <activity
+            android:name=".PayActivity"
+            android:exported="false"
+            android:taskAffinity="app.prepaidpay.agent.lock"
+            android:label="Pay" />
+
+        <activity
             android:name=".LockActivity"
             android:exported="false"
             android:excludeFromRecents="true"
