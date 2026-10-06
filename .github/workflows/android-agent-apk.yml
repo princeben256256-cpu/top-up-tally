@@ -7,6 +7,10 @@ name: Build Lock Agent APK
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths:
+      - "android-agent/**"
     tags:
       - "agent-v*"
 

@@ -7,14 +7,21 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Full-screen kiosk lock. Only "check payment" and emergency call are allowed. */
+/** Full-screen kiosk lock. Only "pay", "check payment" and emergency call are allowed. */
 class LockActivity : AppCompatActivity() {
+
+    companion object {
+        /** True while the customer is in the emergency dialer — don't cover it. */
+        @Volatile var outsideAllowed = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,16 +42,28 @@ class LockActivity : AppCompatActivity() {
                 .onFailure { PayActivity.open = false }
         }
         findViewById<Button>(R.id.emergency).setOnClickListener {
-            startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
+            outsideAllowed = true
+            runCatching { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:"))) }
+                .onFailure { outsideAllowed = false }
         }
 
-        // Keep polling so a payment unlocks within seconds, not 15 minutes.
+        // Poll only while the lock screen is actually visible, so a payment
+        // unlocks within seconds but the phone can sleep (no polling when off).
         lifecycleScope.launch {
-            while (true) {
-                delay(15_000)
-                refreshNow()
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    delay(15_000)
+                    refreshNow()
+                }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        outsideAllowed = false
+        // Back from the payment page or screen just turned on: check right away.
+        refreshNow()
     }
 
     private fun refreshNow() {
@@ -72,11 +91,20 @@ class LockActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Prefs.shouldLock(this) && !PayActivity.open) HeartbeatWorker.showLock(this)
+        relock()
     }
 
     override fun onPause() {
         super.onPause()
-        if (Prefs.shouldLock(this) && !PayActivity.open) HeartbeatWorker.showLock(this)
+        relock()
+    }
+
+    /** Come back to the front if the customer escaped — but never while paying,
+     *  dialling an emergency number, or when the screen is simply turning off. */
+    private fun relock() {
+        if (isFinishing) return
+        if (PayActivity.open || outsideAllowed) return
+        if (!HeartbeatWorker.screenOn(this)) return
+        if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
     }
 }

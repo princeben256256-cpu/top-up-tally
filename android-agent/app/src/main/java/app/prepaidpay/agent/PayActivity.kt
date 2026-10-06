@@ -8,7 +8,7 @@ import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 
-/** Built-in customer payment page — no second app needed. */
+/** Built-in customer payment page — no second app needed. The lock never covers it. */
 class PayActivity : AppCompatActivity() {
 
     companion object { @Volatile var open = false }
@@ -36,9 +36,17 @@ class PayActivity : AppCompatActivity() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Mobile money PIN prompts pause this page; keep the lock away meanwhile.
+        open = true
+    }
+
     override fun onDestroy() {
-        open = false
+        // Only a real close brings the lock back (not a screen rotation).
+        val closing = isFinishing && !isChangingConfigurations
+        if (closing) open = false
         super.onDestroy()
-        if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
+        if (closing && Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
     }
 }

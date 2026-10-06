@@ -28,39 +28,72 @@ class KeepAliveService : Service() {
     )
     private var loop: kotlinx.coroutines.Job? = null
 
+    private var screenReceiver: android.content.BroadcastReceiver? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForegroundWithNotification()
         // Re-apply hardening and make sure the heartbeat is scheduled — this
         // service restarts if the system kills it, so it's a good watchdog.
         DeviceOwner.applyBaselinePolicies(this)
         HeartbeatWorker.schedule(this)
+        registerScreenReceiver()
         if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
         startFastLoop()
         return START_STICKY
     }
 
-    /** Check with the server every 20 seconds so force-lock / payments act fast. */
+    /** When the screen turns on: show the lock at once if due, then confirm with the server. */
+    private fun registerScreenReceiver() {
+        if (screenReceiver != null) return
+        val r = object : android.content.BroadcastReceiver() {
+            override fun onReceive(c: Context, i: Intent) {
+                if (Prefs.shouldLock(c)) HeartbeatWorker.showLock(c)
+                scope.launch { checkOnce() }
+            }
+        }
+        val filter = android.content.IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_ON)
+            addAction(Intent.ACTION_USER_PRESENT)
+        }
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(r, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(r, filter)
+        }
+        screenReceiver = r
+    }
+
+    private suspend fun checkOnce() {
+        val imei = Prefs.imei(this)
+        val secret = Prefs.secret(this)
+        if (imei.isNullOrBlank() || secret.isNullOrBlank()) return
+        val status = runCatching { Api.heartbeat(imei, secret) }.getOrNull()
+        if (status != null) Prefs.saveStatus(this, status)
+        if (Prefs.shouldLock(this)) {
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                HeartbeatWorker.showLock(this@KeepAliveService)
+            }
+        }
+    }
+
+    /**
+     * Screen on: check every 20 seconds so force-lock / payments act fast.
+     * Screen off: check every 3 minutes so the phone sleeps and saves battery.
+     */
     private fun startFastLoop() {
         if (loop?.isActive == true) return
         loop = scope.launch {
             while (true) {
-                val imei = Prefs.imei(this@KeepAliveService)
-                val secret = Prefs.secret(this@KeepAliveService)
-                if (!imei.isNullOrBlank() && !secret.isNullOrBlank()) {
-                    val status = runCatching { Api.heartbeat(imei, secret) }.getOrNull()
-                    if (status != null) Prefs.saveStatus(this@KeepAliveService, status)
-                    if (Prefs.shouldLock(this@KeepAliveService)) {
-                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                            HeartbeatWorker.showLock(this@KeepAliveService)
-                        }
-                    }
-                }
-                kotlinx.coroutines.delay(20_000)
+                checkOnce()
+                val on = HeartbeatWorker.screenOn(this@KeepAliveService)
+                kotlinx.coroutines.delay(if (on) 20_000 else 180_000)
             }
         }
     }
 
     override fun onDestroy() {
+        screenReceiver?.let { runCatching { unregisterReceiver(it) } }
+        screenReceiver = null
         scope.cancel()
         super.onDestroy()
     }
