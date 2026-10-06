@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Customer KYC (photos, ID scans, signature) lives in customer_kyc + private "kyc" bucket, written only by a staff-checked server function that re-verifies IDs with AI — never trust client checks.
+- Deposits reduce the balance but never add paid days; only later payments buy days.
