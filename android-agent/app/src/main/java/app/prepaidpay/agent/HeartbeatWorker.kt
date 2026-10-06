@@ -53,6 +53,8 @@ class HeartbeatWorker(appContext: Context, params: WorkerParameters) :
         }
 
         fun showLock(context: Context) {
+            // Never interrupt the customer while the payment page is open.
+            if (PayActivity.open) return
             val intent = Intent(context, LockActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
             context.startActivity(intent)

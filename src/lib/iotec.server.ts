@@ -104,7 +104,7 @@ export async function startCollection(input: {
   if (insErr) throw new Error(insErr.message);
 
   try {
-    const result = await payFetch("/api/collections", {
+    const result = await payFetch("/api/collections/collect", {
       method: "POST",
       body: JSON.stringify({
         category: "MobileMoney",
