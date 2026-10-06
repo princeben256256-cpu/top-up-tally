@@ -59,7 +59,6 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:showWhenLocked="true"
-            android:turnScreenOn="true"
             android:taskAffinity="app.prepaidpay.agent.lock"
             android:theme="@style/Theme.Agent.Lock" />
 
