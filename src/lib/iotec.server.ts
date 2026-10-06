@@ -52,7 +52,14 @@ async function payFetch(path: string, init: RequestInit = {}) {
   const text = await res.text();
   if (!res.ok) {
     console.error(`[iotec] ${path} failed [${res.status}]: ${text}`);
-    throw new Error(`Payment provider error [${res.status}]: ${text.slice(0, 300)}`);
+    let msg = "";
+    try {
+      const j = JSON.parse(text);
+      msg = j?.message || j?.title || j?.statusMessage || "";
+    } catch {
+      msg = text.slice(0, 200);
+    }
+    throw new Error(msg ? `Mobile money: ${msg}` : `Mobile money error (${res.status}). Please try again.`);
   }
   return text ? JSON.parse(text) : {};
 }
