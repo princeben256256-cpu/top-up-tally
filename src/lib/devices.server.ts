@@ -4,7 +4,7 @@ import { addDays, daysForAmount, isLocked, balanceOf } from "./lock";
 type AnyClient = { from: (t: string) => any };
 
 const DEVICE_PUBLIC_COLUMNS =
-  "id, imei, phone_number, customer_name, device_model, total_price, deposit_paid, daily_rate, amount_paid, paid_until, lock_override, lock_message, enrolled_at, last_seen_at, created_at";
+  "id, imei, imei2, phone_number, customer_name, device_model, total_price, deposit_paid, daily_rate, amount_paid, paid_until, lock_override, lock_message, enrolled_at, last_seen_at, created_at";
 
 export async function listDevicesFor(client: AnyClient) {
   const { data, error } = await client
@@ -39,6 +39,7 @@ export async function createDeviceFor(
   userId: string,
   input: {
     imei: string;
+    imei2?: string;
     phone_number?: string;
     customer_name?: string;
     device_model?: string;
@@ -47,12 +48,15 @@ export async function createDeviceFor(
     daily_rate: number;
   },
 ) {
+  const imei2 = (input.imei2 ?? "").trim() || null;
+  if (imei2 && imei2 === input.imei.trim()) throw new Error("IMEI 1 and IMEI 2 cannot be the same");
   // deposit reduces balance but buys no days
   const days = 0;
   const { data, error } = await client
     .from("devices")
     .insert({
       imei: input.imei.trim(),
+      imei2,
       phone_number: (input.phone_number ?? "").trim(),
       customer_name: (input.customer_name ?? "").trim(),
       device_model: input.device_model?.trim() || null,
@@ -66,7 +70,7 @@ export async function createDeviceFor(
     .select("id")
     .single();
   if (error) {
-    if (error.code === "23505") throw new Error("A device with that IMEI already exists");
+    if (error.code === "23505") throw new Error("A phone with that IMEI is already registered");
     throw new Error(error.message);
   }
   return data;

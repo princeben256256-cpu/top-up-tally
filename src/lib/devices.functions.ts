@@ -4,8 +4,23 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
+function luhnOk(s: string) {
+  let sum = 0;
+  for (let i = 0; i < s.length; i++) {
+    let d = Number(s[s.length - 1 - i]);
+    if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+const imeiField = (label: string) =>
+  z.string().trim()
+    .regex(/^[0-9]{15}$/, `${label} must be exactly 15 digits`)
+    .refine(luhnOk, `${label} is not a real IMEI — check for a typing mistake`);
+
 const createSchema = z.object({
-  imei: z.string().trim().regex(/^[0-9]{14,17}$/, "IMEI must be 14–17 digits"),
+  imei: imeiField("IMEI 1"),
+  imei2: z.union([z.literal(""), imeiField("IMEI 2")]).optional().default(""),
   phone_number: z.string().trim().max(20).optional().default(""),
   customer_name: z.string().trim().max(100).optional().default(""),
   device_model: z.string().trim().max(80).optional(),
