@@ -27,11 +27,7 @@ class PayActivity : AppCompatActivity() {
                 !req.url.toString().startsWith(BuildConfig.API_BASE)
         }
         val imei = Prefs.imei(this).orEmpty()
-        if (savedInstanceState == null) {
-            web.loadUrl(BuildConfig.API_BASE + "/pay?imei=" + imei)
-        } else {
-            web.restoreState(savedInstanceState)
-        }
+        web.loadUrl(BuildConfig.API_BASE + "/pay?imei=" + imei)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {

@@ -50,6 +50,8 @@
         <activity
             android:name=".PayActivity"
             android:exported="false"
+            android:showWhenLocked="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|uiMode"
             android:taskAffinity="app.prepaidpay.agent.lock"
             android:label="Pay" />
 
