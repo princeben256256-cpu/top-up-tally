@@ -128,7 +128,7 @@ function DeviceDetail() {
                 {d.customer_name || "In stock — no customer yet"}
               </h1>
               <p className="mt-0.5 truncate text-xs text-white/70">
-                {d.phone_number ? `${d.phone_number} · ` : ""}{d.device_model || "Unknown model"} · IMEI {d.imei}
+                {d.phone_number ? `${d.phone_number} · ` : ""}{d.device_model || "Unknown model"} · IMEI {d.imei}{d.imei2 ? ` / ${d.imei2}` : ""}
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${locked ? "bg-white/15 text-white" : "bg-white/15 text-white"}`}>

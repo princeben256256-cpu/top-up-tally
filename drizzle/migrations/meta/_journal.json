@@ -43,6 +43,13 @@
       "when": 1791295204533,
       "tag": "0005_agents_admin_only",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791296448057,
+      "tag": "0006_add_imei2",
+      "breakpoints": true
     }
   ]
 }

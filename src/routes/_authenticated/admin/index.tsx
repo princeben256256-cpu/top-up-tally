@@ -27,6 +27,7 @@ const emptyForm = {
   customer_name: "",
   phone_number: "",
   imei: "",
+  imei2: "",
   device_model: "",
   total_price: "",
   deposit_paid: "",
@@ -42,6 +43,7 @@ function AdminHome() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [dualSim, setDualSim] = useState(true);
 
   const { data: roleData } = useQuery({ queryKey: ["my-role"], queryFn: () => roleFn({}) });
 
@@ -58,6 +60,7 @@ function AdminHome() {
           customer_name: form.customer_name,
           phone_number: form.phone_number,
           imei: form.imei,
+          imei2: dualSim ? form.imei2 : "",
           device_model: form.device_model || undefined,
           total_price: Number(form.total_price || 0),
           deposit_paid: Number(form.deposit_paid || 0),
@@ -74,7 +77,7 @@ function AdminHome() {
   });
 
   const filtered = devices.filter((d: any) =>
-    [d.customer_name, d.phone_number, d.imei].join(" ").toLowerCase().includes(search.toLowerCase()),
+    [d.customer_name, d.phone_number, d.imei, d.imei2].join(" ").toLowerCase().includes(search.toLowerCase()),
   );
 
   const lockedCount = devices.filter((d: any) => isLocked(d)).length;
@@ -143,8 +146,18 @@ function AdminHome() {
             className="mt-4 grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-2"
           >
             <p className="font-display text-sm font-semibold sm:col-span-2">New device</p>
+            <div className="flex gap-2 sm:col-span-2">
+              {[["Dual SIM (2 IMEIs)", true], ["Single SIM (1 IMEI)", false]].map(([l, v]) => (
+                <button key={String(v)} type="button" onClick={() => setDualSim(v as boolean)}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ${dualSim === v ? "border-primary bg-primary text-primary-foreground" : "border-input text-muted-foreground"}`}>
+                  {l as string}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground sm:col-span-2">Dial *#06# on the phone. Each IMEI must be exactly 15 digits.</p>
             {[
-              ["imei", "IMEI (14–17 digits)", "text"],
+              ["imei", dualSim ? "IMEI 1 (15 digits)" : "IMEI (15 digits)", "text"],
+              ...(dualSim ? [["imei2", "IMEI 2 (15 digits)", "text"]] : []),
               ["customer_name", "Customer name (leave empty to stock)", "text"],
               ["phone_number", "Customer phone (leave empty to stock)", "tel"],
               ["device_model", "Device model", "text"],
@@ -156,6 +169,7 @@ function AdminHome() {
                 {label}
                 <input
                   type={type}
+                  {...(key.startsWith("imei") ? { inputMode: "numeric" as const, pattern: "[0-9]{15}", maxLength: 15, title: "Exactly 15 digits" } : {})}
                   required={!["device_model", "customer_name", "phone_number", "deposit_paid"].includes(key)}
                   value={(form as any)[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
