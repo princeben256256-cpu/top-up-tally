@@ -178,7 +178,7 @@ export async function lookupDevicePublic(query: string) {
     .select(
       "id, imei, phone_number, customer_name, device_model, total_price, deposit_paid, daily_rate, amount_paid, paid_until, lock_override, lock_message",
     )
-    .or(`imei.eq.${q},phone_number.eq.${q}`)
+    .or(`imei.eq.${q},imei2.eq.${q},phone_number.eq.${q}`)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) return null;
