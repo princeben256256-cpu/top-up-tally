@@ -11,6 +11,8 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Permanent foreground notification. itel / Infinix / Tecno (Transsion) phones
