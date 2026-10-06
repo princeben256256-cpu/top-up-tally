@@ -30,6 +30,7 @@ class LockActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.refresh).setOnClickListener { refreshNow() }
         findViewById<Button>(R.id.pay).setOnClickListener {
+            PayActivity.open = true
             startActivity(Intent(this, PayActivity::class.java))
         }
         findViewById<Button>(R.id.emergency).setOnClickListener {
