@@ -52,12 +52,19 @@ class HeartbeatWorker(appContext: Context, params: WorkerParameters) :
             )
         }
 
+        fun screenOn(context: Context): Boolean =
+            (context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager).isInteractive
+
         fun showLock(context: Context) {
-            // Never interrupt the customer while the payment page is open.
-            if (PayActivity.open) return
+            // Never interrupt the customer while the payment page or emergency dialer is open.
+            if (PayActivity.open || LockActivity.outsideAllowed) return
+            // Screen off: let the phone sleep. The lock appears the moment the
+            // screen turns on (KeepAliveService listens for that).
+            if (!screenOn(context)) return
+            // Bring the existing lock screen forward instead of rebuilding it.
             val intent = Intent(context, LockActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            context.startActivity(intent)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            runCatching { context.startActivity(intent) }
         }
     }
 }
