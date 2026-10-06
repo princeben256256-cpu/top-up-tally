@@ -43,9 +43,6 @@ object DeviceOwner {
             dpm.addUserRestriction(admin, UserManager.DISALLOW_CONFIG_DATE_TIME)
             dpm.addUserRestriction(admin, UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES)
             dpm.addUserRestriction(admin, UserManager.DISALLOW_NETWORK_RESET)
-            // The shop's Google account can't be removed by the customer
-            // (removal is blocked; adding their own account stays allowed).
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_REMOVE_ACCOUNTS)
             dpm.setAutoTimeRequired(admin, true)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
