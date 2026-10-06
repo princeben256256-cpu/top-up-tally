@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { listDevices, createDevice, getMyRole, getAgentSettings, saveAgentSettings } from "@/lib/devices.functions";
 import { isLocked, balanceOf, formatMoney, daysRemaining } from "@/lib/lock";
+import { AgentsPanel } from "@/components/AgentsPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -175,6 +176,12 @@ function AdminHome() {
         )}
 
         {roleData?.role === "admin" && <AgentSetup />}
+        {roleData?.role === "admin" && <AgentsPanel />}
+        {roleData?.role === "none" && (
+          <p className="mt-4 rounded-xl border border-border bg-card p-4 text-sm text-destructive">
+            This account has no access. Ask the admin to add you as an agent.
+          </p>
+        )}
 
         <div className="mt-6 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />

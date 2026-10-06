@@ -83,7 +83,7 @@ export const getMyRole = createServerFn({ method: "GET" })
       .select("role")
       .eq("user_id", context.userId)
       .maybeSingle();
-    return { role: (data?.role as string) ?? "agent" };
+    return { role: (data?.role as string) ?? "none" };
   });
 
 export const lookupDevice = createServerFn({ method: "POST" })
