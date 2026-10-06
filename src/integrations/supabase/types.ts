@@ -35,6 +35,92 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_kyc: {
+        Row: {
+          address: string
+          alt_phone: string
+          created_at: string
+          created_by: string | null
+          customer_photo: string | null
+          device_id: string
+          full_name: string
+          guarantor_address: string
+          guarantor_id_back: string | null
+          guarantor_id_front: string | null
+          guarantor_name: string
+          guarantor_nin: string
+          guarantor_phone: string
+          guarantor_photo: string | null
+          guarantor_relationship: string
+          id: string
+          id_back: string | null
+          id_checks: Json
+          id_front: string | null
+          nin: string
+          occupation: string
+          primary_phone: string
+          signature: string | null
+        }
+        Insert: {
+          address?: string
+          alt_phone: string
+          created_at?: string
+          created_by?: string | null
+          customer_photo?: string | null
+          device_id: string
+          full_name: string
+          guarantor_address?: string
+          guarantor_id_back?: string | null
+          guarantor_id_front?: string | null
+          guarantor_name: string
+          guarantor_nin: string
+          guarantor_phone: string
+          guarantor_photo?: string | null
+          guarantor_relationship?: string
+          id?: string
+          id_back?: string | null
+          id_checks?: Json
+          id_front?: string | null
+          nin: string
+          occupation?: string
+          primary_phone: string
+          signature?: string | null
+        }
+        Update: {
+          address?: string
+          alt_phone?: string
+          created_at?: string
+          created_by?: string | null
+          customer_photo?: string | null
+          device_id?: string
+          full_name?: string
+          guarantor_address?: string
+          guarantor_id_back?: string | null
+          guarantor_id_front?: string | null
+          guarantor_name?: string
+          guarantor_nin?: string
+          guarantor_phone?: string
+          guarantor_photo?: string | null
+          guarantor_relationship?: string
+          id?: string
+          id_back?: string | null
+          id_checks?: Json
+          id_front?: string | null
+          nin?: string
+          occupation?: string
+          primary_phone?: string
+          signature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_kyc_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           amount_paid: number

@@ -76,7 +76,8 @@ function CustomerConsole() {
   }
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(LAST_QUERY);
+    const fromApp = new URLSearchParams(window.location.search).get("imei");
+    const saved = fromApp || window.localStorage.getItem(LAST_QUERY);
     if (saved) {
       setQuery(saved);
       void load(saved);

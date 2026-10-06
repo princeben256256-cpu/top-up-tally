@@ -47,7 +47,8 @@ export async function createDeviceFor(
     daily_rate: number;
   },
 ) {
-  const days = daysForAmount(input.deposit_paid, input.daily_rate);
+  // deposit reduces balance but buys no days
+  const days = 0;
   const { data, error } = await client
     .from("devices")
     .insert({
@@ -127,7 +128,7 @@ export async function assignCustomerFor(
   if (error) throw new Error(error.message);
   if (!device) throw new Error("Device not found");
   if (device.customer_name) throw new Error("This phone already has a customer");
-  const days = daysForAmount(input.deposit_paid, Number(device.daily_rate));
+  const days = 0; // deposit buys no days
   const { error: updErr } = await client
     .from("devices")
     .update({

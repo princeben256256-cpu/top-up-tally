@@ -29,6 +29,9 @@ class LockActivity : AppCompatActivity() {
         render()
 
         findViewById<Button>(R.id.refresh).setOnClickListener { refreshNow() }
+        findViewById<Button>(R.id.pay).setOnClickListener {
+            startActivity(Intent(this, PayActivity::class.java))
+        }
         findViewById<Button>(R.id.emergency).setOnClickListener {
             startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
         }
@@ -67,11 +70,11 @@ class LockActivity : AppCompatActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
+        if (Prefs.shouldLock(this) && !PayActivity.open) HeartbeatWorker.showLock(this)
     }
 
     override fun onPause() {
         super.onPause()
-        if (Prefs.shouldLock(this)) HeartbeatWorker.showLock(this)
+        if (Prefs.shouldLock(this) && !PayActivity.open) HeartbeatWorker.showLock(this)
     }
 }

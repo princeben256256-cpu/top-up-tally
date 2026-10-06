@@ -42,10 +42,18 @@
         android:textSize="14sp" />
 
     <Button
-        android:id="@+id/refresh"
+        android:id="@+id/pay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:backgroundTint="#22C55E"
+        android:text="Pay now with mobile money" />
+
+    <Button
+        android:id="@+id/refresh"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:text="I have paid — check now" />
 
     <Button

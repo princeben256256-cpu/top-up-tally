@@ -6,6 +6,7 @@ import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2, QrCode, Banknot
 import { toast } from "sonner";
 import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCustomer, getAgentSettings } from "@/lib/devices.functions";
 import { QRCodeSVG } from "qrcode.react";
+import { getCustomerKyc } from "@/lib/kyc.functions";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/lib/lock";
 
@@ -148,7 +149,13 @@ function DeviceDetail() {
       </header>
 
       <div className="mx-auto w-full max-w-3xl px-5 py-6">
-        {!d.customer_name && <AssignCustomer id={id} />}
+        {!d.customer_name && (
+          <Link to="/admin/register/$id" params={{ id }} className="mb-4 block rounded-xl border-2 border-brand/40 bg-card p-4 text-center">
+            <p className="font-display text-sm font-semibold">Sell this phone — register customer</p>
+            <p className="mt-1 text-xs text-muted-foreground">Photos, National ID scans, guarantor and signature</p>
+          </Link>
+        )}
+        {d.customer_name && <KycPanel id={id} />}
 
         <div className="grid gap-2 grid-cols-3">
           <Stat label="Balance" value={formatMoney(balanceOf(d))} />
@@ -396,6 +403,38 @@ function SetupQr({ device }: { device: any }) {
           An admin must first fill in "Lock app setup" on the device list page.
         </p>
       )}
+    </section>
+  );
+}
+
+function KycPanel({ id }: { id: string }) {
+  const fn = useServerFn(getCustomerKyc);
+  const { data: k } = useQuery({ queryKey: ["kyc", id], queryFn: () => fn({ data: { device_id: id } }) });
+  if (!k) return null;
+  const u = (k as any).urls as Record<string, string | null>;
+  const pics: [string, string][] = [
+    ["customer_photo", "Customer"], ["id_front", "ID front"], ["id_back", "ID back"],
+    ["guarantor_photo", "Guarantor"], ["guarantor_id_front", "G. ID front"], ["guarantor_id_back", "G. ID back"], ["signature", "Signature"],
+  ];
+  return (
+    <section className="mb-4 rounded-xl border border-border bg-card p-4 text-sm">
+      <h2 className="font-display text-sm font-semibold">Customer file</h2>
+      <Row k="Name" v={k.full_name} />
+      <Row k="NIN" v={k.nin} />
+      <Row k="Account (main phone)" v={k.primary_phone} />
+      <Row k="Second phone" v={k.alt_phone} />
+      <Row k="Address" v={k.address} />
+      <Row k="Guarantor" v={`${k.guarantor_name} (${k.guarantor_relationship})`} />
+      <Row k="Guarantor NIN" v={k.guarantor_nin} />
+      <Row k="Guarantor phone" v={k.guarantor_phone} />
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {pics.map(([key, label]) => u[key] ? (
+          <a key={key} href={u[key]!} target="_blank" rel="noreferrer" className="text-center text-[10px] text-muted-foreground">
+            <img src={u[key]!} alt={label} className="h-16 w-full rounded border border-border bg-white object-cover" />
+            {label}
+          </a>
+        ) : null)}
+      </div>
     </section>
   );
 }

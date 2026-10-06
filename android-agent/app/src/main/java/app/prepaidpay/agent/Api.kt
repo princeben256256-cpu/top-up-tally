@@ -55,5 +55,5 @@ object Api {
         }
     }
 
-    fun payUrl(imei: String) = BuildConfig.API_BASE + "/?imei=" + imei
+    fun payUrl(imei: String) = BuildConfig.API_BASE + "/pay?imei=" + imei
 }
