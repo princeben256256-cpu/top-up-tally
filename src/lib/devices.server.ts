@@ -213,7 +213,12 @@ export async function deviceHeartbeat(imei: string, secret: string) {
     .eq("id", data.id);
 
   const locked = isLocked(data as any);
+  const { data: settings } = await supabaseAdmin
+    .from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
+  const balance = balanceOf(data as any);
   return {
+    frp_account_id: (settings as any)?.frp_account_id ?? "",
+    fully_paid: Number(data.total_price) > 0 && balance <= 0,
     device_id: data.id,
     customer_name: data.customer_name,
     locked,

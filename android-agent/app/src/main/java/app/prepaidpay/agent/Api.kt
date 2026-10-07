@@ -13,6 +13,8 @@ object Api {
         val balance: String,
         val paidUntil: String,
         val customerName: String,
+        val frpAccountId: String = "",
+        val fullyPaid: Boolean = false,
     )
 
     private const val HEARTBEAT_PATH = "/api/public/device/heartbeat"
@@ -49,6 +51,8 @@ object Api {
                 balance = json.optString("balance", "0"),
                 paidUntil = json.optString("paid_until", ""),
                 customerName = json.optString("customer_name", ""),
+                frpAccountId = json.optString("frp_account_id", ""),
+                fullyPaid = json.optBoolean("fully_paid", false),
             )
         } finally {
             conn.disconnect()

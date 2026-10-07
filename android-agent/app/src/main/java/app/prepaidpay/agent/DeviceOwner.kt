@@ -75,4 +75,36 @@ object DeviceOwner {
             }
         }
     }
+
+    /**
+     * After any factory reset or flash, only the shop Google account can finish
+     * setup. Works even if the customer removed that account from Settings.
+     * Cleared automatically once the phone is fully paid.
+     */
+    fun applyResetProtection(context: Context, accountId: String, fullyPaid: Boolean) {
+        if (!isDeviceOwner(context)) return
+        val dpm = dpm(context)
+        val admin = admin(context)
+        val ids = if (fullyPaid || accountId.isBlank()) emptyList() else listOf(accountId.trim())
+        runCatching {
+            if (Build.VERSION.SDK_INT >= 30) {
+                val policy = if (ids.isEmpty()) null else
+                    android.app.admin.FactoryResetProtectionPolicy.Builder()
+                        .setFactoryResetProtectionAccounts(ids)
+                        .setFactoryResetProtectionEnabled(true)
+                        .build()
+                dpm.setFactoryResetProtectionPolicy(admin, policy)
+            }
+        }
+        // Older Android: Google Play services reads the same rule from here.
+        runCatching {
+            val b = android.os.Bundle()
+            if (ids.isNotEmpty()) b.putStringArray("factoryResetProtectionAdmin", ids.toTypedArray())
+            dpm.setApplicationRestrictions(admin, "com.google.android.gms", b)
+            context.sendBroadcast(
+                android.content.Intent("com.google.android.gms.auth.FRP_CONFIG_CHANGED")
+                    .setPackage("com.google.android.gms")
+            )
+        }
+    }
 }

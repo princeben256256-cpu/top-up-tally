@@ -33,6 +33,8 @@ export const Route = createFileRoute("/api/public/device/heartbeat")({
           paid_until: result.paid_until,
           message: result.message,
           customer_name: result.customer_name,
+          frp_account_id: result.frp_account_id,
+          fully_paid: result.fully_paid,
           checked_at: new Date().toISOString(),
         });
       },

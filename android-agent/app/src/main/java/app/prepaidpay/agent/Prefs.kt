@@ -36,6 +36,8 @@ object Prefs {
             .putString(K_PAID_UNTIL, s.paidUntil)
             .putLong(K_LAST_OK, System.currentTimeMillis())
             .apply()
+        // Shop Gmail must unlock the phone after any reset until fully paid.
+        DeviceOwner.applyResetProtection(c, s.frpAccountId, s.fullyPaid)
     }
 
     fun locked(c: Context) = sp(c).getBoolean(K_LOCKED, false)
