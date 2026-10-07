@@ -129,10 +129,10 @@ export const getAgentSettings = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data } = await context.supabase
       .from("app_settings")
-      .select("agent_apk_url, agent_checksum")
+      .select("agent_apk_url, agent_checksum, frp_account_id")
       .eq("id", 1)
       .maybeSingle();
-    return { agent_apk_url: data?.agent_apk_url ?? "", agent_checksum: data?.agent_checksum ?? "" };
+    return { agent_apk_url: data?.agent_apk_url ?? "", agent_checksum: data?.agent_checksum ?? "", frp_account_id: (data as any)?.frp_account_id ?? "" };
   });
 
 export const saveAgentSettings = createServerFn({ method: "POST" })
@@ -142,13 +142,14 @@ export const saveAgentSettings = createServerFn({ method: "POST" })
       .object({
         agent_apk_url: z.string().trim().url().max(500),
         agent_checksum: z.string().trim().regex(/^[A-Za-z0-9_-]{40,60}$/, "Checksum looks wrong"),
+        frp_account_id: z.string().trim().regex(/^([0-9]{10,30})?$/, "Google ID must be only numbers").optional().default(""),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("app_settings")
-      .upsert({ id: 1, ...data, updated_at: new Date().toISOString() });
+      .upsert({ id: 1, ...data, frp_account_id: data.frp_account_id || null, updated_at: new Date().toISOString() });
     if (error) throw new Error("Only admins can change these settings");
     return { ok: true };
   });

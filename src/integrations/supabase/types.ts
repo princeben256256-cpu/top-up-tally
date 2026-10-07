@@ -18,18 +18,21 @@ export type Database = {
         Row: {
           agent_apk_url: string | null
           agent_checksum: string | null
+          frp_account_id: string | null
           id: number
           updated_at: string
         }
         Insert: {
           agent_apk_url?: string | null
           agent_checksum?: string | null
+          frp_account_id?: string | null
           id?: number
           updated_at?: string
         }
         Update: {
           agent_apk_url?: string | null
           agent_checksum?: string | null
+          frp_account_id?: string | null
           id?: number
           updated_at?: string
         }

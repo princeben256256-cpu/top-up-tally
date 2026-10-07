@@ -1,0 +1,1 @@
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS frp_account_id text;

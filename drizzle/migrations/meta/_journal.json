@@ -50,6 +50,13 @@
       "when": 1791296448057,
       "tag": "0006_add_imei2",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791379024816,
+      "tag": "0007_frp_account",
+      "breakpoints": true
     }
   ]
 }
