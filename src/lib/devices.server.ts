@@ -194,14 +194,18 @@ export async function lookupDevicePublic(query: string) {
 
 /** Device-agent heartbeat: authenticates with IMEI + enrollment secret. */
 export async function deviceHeartbeat(imei: string, secret: string) {
-  const { data, error } = await supabaseAdmin
+  const cols =
+    "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at";
+  // Phones enrolled before an IMEI correction still send the old number
+  // (e.g. 14 digits without the last check digit). The secret proves identity.
+  const { data: rows, error } = await supabaseAdmin
     .from("devices")
-    .select(
-      "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at",
-    )
-    .eq("imei", imei)
-    .maybeSingle();
+    .select(cols)
+    .or(`imei.eq.${imei},imei2.eq.${imei},imei.like.${imei}_,imei2.like.${imei}_`)
+    .eq("enrollment_secret", secret)
+    .limit(1);
   if (error) throw new Error(error.message);
+  const data = rows?.[0];
   if (!data || data.enrollment_secret !== secret) return null;
 
   await supabaseAdmin
