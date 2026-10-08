@@ -223,6 +223,8 @@ export async function deviceHeartbeat(imei: string, secret: string) {
   return {
     frp_account_id: (settings as any)?.frp_account_id ?? "",
     fully_paid: Number(data.total_price) > 0 && balance <= 0,
+    // Phone clock locks at this moment even with no internet (null = never auto-lock).
+    lock_at: data.lock_override === "auto" && balance > 0 ? data.paid_until : null,
     device_id: data.id,
     customer_name: data.customer_name,
     locked,

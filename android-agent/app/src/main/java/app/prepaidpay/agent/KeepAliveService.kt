@@ -69,6 +69,7 @@ class KeepAliveService : Service() {
         if (imei.isNullOrBlank() || secret.isNullOrBlank()) return
         val status = runCatching { Api.heartbeat(imei, secret) }.getOrNull()
         if (status != null) Prefs.saveStatus(this, status)
+        updateNotification()
         if (Prefs.shouldLock(this)) {
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 HeartbeatWorker.showLock(this@KeepAliveService)
@@ -85,6 +86,12 @@ class KeepAliveService : Service() {
         loop = scope.launch {
             while (true) {
                 checkOnce()
+                // Offline too: the phone clock alone triggers the lock.
+                if (Prefs.shouldLock(this@KeepAliveService)) {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        HeartbeatWorker.showLock(this@KeepAliveService)
+                    }
+                }
                 val on = HeartbeatWorker.screenOn(this@KeepAliveService)
                 kotlinx.coroutines.delay(if (on) 20_000 else 180_000)
             }
@@ -96,6 +103,28 @@ class KeepAliveService : Service() {
         screenReceiver = null
         scope.cancel()
         super.onDestroy()
+    }
+
+    private fun updateNotification() {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        runCatching { nm.notify(ID, buildNotification()) }
+    }
+
+    private fun buildNotification(): Notification {
+        val openIntent = PendingIntent.getActivity(
+            this, 0, Intent(this, LockActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher)
+            .setContentTitle(getString(R.string.keepalive_title))
+            .setContentText(Prefs.countdownText(this))
+            .setContentIntent(openIntent)
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .build()
     }
 
     private fun startForegroundWithNotification() {
@@ -110,22 +139,7 @@ class KeepAliveService : Service() {
             )
         }
 
-        val openIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, LockActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
-
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher)
-            .setContentTitle(getString(R.string.keepalive_title))
-            .setContentText(getString(R.string.keepalive_text))
-            .setContentIntent(openIntent)
-            .setOngoing(true)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setPriority(NotificationCompat.PRIORITY_MIN)
-            .build()
+        val notification: Notification = buildNotification()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)

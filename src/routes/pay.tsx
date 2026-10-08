@@ -282,9 +282,7 @@ function CustomerConsole() {
                   </span>
                 </div>
                 {!device.locked && (
-                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
-                    {Math.max(0, daysRemaining(device.paid_until))} days left
-                  </span>
+                  <LockCountdown paidUntil={device.paid_until} paidOff={device.balance <= 0} />
                 )}
               </div>
               <h2 className="mt-2 font-display text-lg font-semibold text-white">{device.customer_name}</h2>
@@ -408,5 +406,26 @@ function Notice({ title, body }: { title: string; body: string }) {
       <h3 className="font-display text-sm font-semibold">{title}</h3>
       <p className="mt-1.5 text-sm text-muted-foreground">{body}</p>
     </section>
+  );
+}
+
+function LockCountdown({ paidUntil, paidOff }: { paidUntil: string; paidOff: boolean }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+  let text = "Fully paid";
+  if (!paidOff) {
+    const mins = Math.max(0, Math.floor((new Date(paidUntil).getTime() - now) / 60_000));
+    const d = Math.floor(mins / 1440);
+    const h = Math.floor((mins % 1440) / 60);
+    const m = mins % 60;
+    text = `Locks in ${d > 0 ? `${d}d ` : ""}${h}h ${m}m`;
+  }
+  return (
+    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
+      {text}
+    </span>
   );
 }
