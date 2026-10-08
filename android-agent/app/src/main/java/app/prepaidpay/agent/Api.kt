@@ -15,6 +15,8 @@ object Api {
         val customerName: String,
         val frpAccountId: String = "",
         val fullyPaid: Boolean = false,
+        /** Epoch ms when the phone must lock by its own clock; 0 = never. */
+        val lockAtMs: Long = 0L,
     )
 
     private const val HEARTBEAT_PATH = "/api/public/device/heartbeat"
@@ -53,10 +55,20 @@ object Api {
                 customerName = json.optString("customer_name", ""),
                 frpAccountId = json.optString("frp_account_id", ""),
                 fullyPaid = json.optBoolean("fully_paid", false),
+                lockAtMs = parseIso(json.optString("lock_at", "")),
             )
         } finally {
             conn.disconnect()
         }
+    }
+
+    fun parseIso(v: String): Long {
+        if (v.isBlank() || v == "null") return 0L
+        return runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 26) java.time.OffsetDateTime.parse(v).toInstant().toEpochMilli()
+            else java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+                .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }.parse(v.take(19))!!.time
+        }.getOrDefault(0L)
     }
 
     fun payUrl(imei: String) = BuildConfig.API_BASE + "/pay?imei=" + imei
