@@ -282,9 +282,7 @@ function CustomerConsole() {
                   </span>
                 </div>
                 {!device.locked && (
-                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
-                    {Math.max(0, daysRemaining(device.paid_until))} days left
-                  </span>
+                  <LockCountdown paidUntil={device.paid_until} paidOff={device.balance <= 0} />
                 )}
               </div>
               <h2 className="mt-2 font-display text-lg font-semibold text-white">{device.customer_name}</h2>
