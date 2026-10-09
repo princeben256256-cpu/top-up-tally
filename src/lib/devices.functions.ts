@@ -142,7 +142,13 @@ export const saveAgentSettings = createServerFn({ method: "POST" })
       .object({
         agent_apk_url: z.string().trim().url().max(500),
         agent_checksum: z.string().trim().regex(/^[A-Za-z0-9_-]{40,60}$/, "Checksum looks wrong"),
-        frp_account_id: z.string().trim().regex(/^([0-9]{10,30})?$/, "Google ID must be only numbers").optional().default(""),
+        frp_account_id: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(/^([a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+)?$/, "Enter the shop Gmail address, e.g. shop@gmail.com")
+          .optional()
+          .default(""),
       })
       .parse(d),
   )

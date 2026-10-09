@@ -344,16 +344,18 @@ function AgentSetup() {
           onChange={(e) => setSum(e.target.value.replace(/^PACKAGE_CHECKSUM=/, ""))}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
-        <label className="mt-1 text-xs font-semibold">Shop Gmail ID (reset protection)</label>
+        <label className="mt-1 text-xs font-semibold">Shop Gmail address (reset protection)</label>
         <input
-          inputMode="numeric"
-          placeholder="Numbers only, e.g. 104523987612345678901"
+          inputMode="email"
+          type="email"
+          placeholder="e.g. mulikaphones@gmail.com"
           value={frp ?? data?.frp_account_id ?? ""}
-          onChange={(e) => setFrp(e.target.value.replace(/[^0-9]/g, ""))}
+          onChange={(e) => setFrp(e.target.value.trim().toLowerCase())}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
         <p className="text-[11px] text-muted-foreground">
-          After any reset, only this shop Gmail can open the phone until it is fully paid.
+          Type the full Gmail address you put on the phone. After any reset, only that Gmail can
+          open the phone until it is fully paid.
         </p>
         <button
           disabled={save.isPending}
