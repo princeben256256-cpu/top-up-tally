@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PrepaidPay Agent</string>
+    <string name="app_name">MULIKA Agent</string>
     <string name="keepalive_channel">Device protection</string>
     <string name="keepalive_title">Device protection active</string>
     <string name="keepalive_text">Payment status is checked automatically.</string>

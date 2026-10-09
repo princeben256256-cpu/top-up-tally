@@ -1,4 +1,4 @@
-# PrepaidPay Lock Agent (Android Device Owner)
+# MULIKA Lock Agent (Android Device Owner)
 
 Native agent that makes the phone genuinely unusable until the customer pays.
 It is **not** a Median/Capacitor wrapper — it uses `DevicePolicyManager` in

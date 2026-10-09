@@ -120,7 +120,7 @@ export async function startCollection(input: {
         externalId,
         payer,
         amount: input.amount,
-        payerNote: `PrepaidPay ${device.imei}`,
+        payerNote: `MULIKA ${device.imei}`,
         payeeNote: `Device payment - ${device.customer_name}`,
         channel: "Web",
         transactionChargesCategory: "ChargeWallet",

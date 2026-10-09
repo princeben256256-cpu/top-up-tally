@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <div>
               <p className="font-display text-base font-semibold leading-none tracking-tight text-white">
-                PrepaidPay
+                MULIKA
               </p>
               <p className="mt-0.5 text-[11px] text-white/60">Device financing, paid as you go</p>
             </div>
@@ -21,7 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="flex-1 pb-16">{children}</main>
         <footer className="border-t border-border px-5 py-4 text-center text-[11px] text-muted-foreground">
-          PrepaidPay device financing ·{" "}
+          MULIKA device financing ·{" "}
           <Link to="/admin" className="font-medium text-brand underline underline-offset-2">
             Staff console
           </Link>

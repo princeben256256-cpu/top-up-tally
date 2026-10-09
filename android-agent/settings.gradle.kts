@@ -12,5 +12,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PrepaidPayAgent"
+rootProject.name = "MULIKAAgent"
 include(":app")

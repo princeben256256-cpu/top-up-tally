@@ -4,7 +4,7 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Talks to the PrepaidPay lock API. The server is always the authority. */
+/** Talks to the MULIKA lock API. The server is always the authority. */
 object Api {
 
     data class Status(

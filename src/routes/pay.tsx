@@ -12,13 +12,13 @@ import { formatDate, formatMoney } from "../lib/lock";
 export const Route = createFileRoute("/pay")({
   head: () => ({
     meta: [
-      { title: "My Device — PrepaidPay customer console" },
+      { title: "My Device — MULIKA customer console" },
       {
         name: "description",
         content:
           "Enter your IMEI or phone number to see your balance, next due date and pay by mobile money to unlock your device.",
       },
-      { property: "og:title", content: "My Device — PrepaidPay customer console" },
+      { property: "og:title", content: "My Device — MULIKA customer console" },
       {
         property: "og:description",
         content: "Check your balance, next due date and pay by mobile money to keep your phone unlocked.",
