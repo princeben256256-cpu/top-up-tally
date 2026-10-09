@@ -12,9 +12,9 @@ import { AgentsPanel } from "@/components/AgentsPanel";
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
-      { title: "Staff console — PrepaidPay device financing" },
+      { title: "Staff console — MULIKA device financing" },
       { name: "description", content: "Register financed phones by IMEI, record payments and control device lock state." },
-      { property: "og:title", content: "Staff console — PrepaidPay" },
+      { property: "og:title", content: "Staff console — MULIKA" },
       { property: "og:description", content: "Register financed phones by IMEI, record payments and control device lock state." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -109,7 +109,7 @@ function AdminHome() {
                 <ShieldCheck className="h-5 w-5 text-brand-foreground" />
               </span>
               <div>
-                <h1 className="font-display text-lg font-semibold leading-none">PrepaidPay Console</h1>
+                <h1 className="font-display text-lg font-semibold leading-none">MULIKA Console</h1>
                 <p className="mt-1 text-[11px] capitalize text-white/60">{roleData?.role ?? "…"} account</p>
               </div>
             </div>

@@ -7,10 +7,10 @@ import { lovable } from "@/integrations/lovable/index";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Staff sign in — PrepaidPay device financing" },
-      { name: "description", content: "Dealer and agent sign in for the PrepaidPay device financing console." },
-      { property: "og:title", content: "Staff sign in — PrepaidPay" },
-      { property: "og:description", content: "Dealer and agent sign in for the PrepaidPay device financing console." },
+      { title: "Staff sign in — MULIKA device financing" },
+      { name: "description", content: "Dealer and agent sign in for the MULIKA device financing console." },
+      { property: "og:title", content: "Staff sign in — MULIKA" },
+      { property: "og:description", content: "Dealer and agent sign in for the MULIKA device financing console." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -95,7 +95,7 @@ function AuthPage() {
           {mode === "signin" ? "Staff sign in" : "Create staff account"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          PrepaidPay device financing console
+          MULIKA device financing console
         </p>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-3">

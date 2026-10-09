@@ -9,9 +9,9 @@ import { registerCustomer, verifyIdPhoto } from "@/lib/kyc.functions";
 export const Route = createFileRoute("/_authenticated/admin/register/$id")({
   head: () => ({
     meta: [
-      { title: "Register customer — PrepaidPay staff console" },
+      { title: "Register customer — MULIKA staff console" },
       { name: "description", content: "Full customer enrolment with ID scans, guarantor and signature." },
-      { property: "og:title", content: "Register customer — PrepaidPay" },
+      { property: "og:title", content: "Register customer — MULIKA" },
       { property: "og:description", content: "Full customer enrolment with ID scans, guarantor and signature." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

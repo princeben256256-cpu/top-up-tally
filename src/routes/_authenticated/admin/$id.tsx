@@ -14,9 +14,9 @@ import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/l
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
     meta: [
-      { title: "Device details — PrepaidPay staff console" },
+      { title: "Device details — MULIKA staff console" },
       { name: "description", content: "View a financed device, record payments and lock or unlock it remotely." },
-      { property: "og:title", content: "Device details — PrepaidPay" },
+      { property: "og:title", content: "Device details — MULIKA" },
       { property: "og:description", content: "View a financed device, record payments and lock or unlock it remotely." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

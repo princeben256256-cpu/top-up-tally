@@ -6,15 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Choose a new password — PrepaidPay" },
+      { title: "Choose a new password — MULIKA" },
       {
         name: "description",
-        content: "Set a new password for your PrepaidPay staff account.",
+        content: "Set a new password for your MULIKA staff account.",
       },
-      { property: "og:title", content: "Choose a new password — PrepaidPay" },
+      { property: "og:title", content: "Choose a new password — MULIKA" },
       {
         property: "og:description",
-        content: "Set a new password for your PrepaidPay staff account.",
+        content: "Set a new password for your MULIKA staff account.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
