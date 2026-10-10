@@ -1,0 +1,2 @@
+- [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [ ] Unlock the stuck Samsung — needs a Samsung technician (blocked on the phone's owner)

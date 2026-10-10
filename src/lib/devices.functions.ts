@@ -142,11 +142,12 @@ export const saveAgentSettings = createServerFn({ method: "POST" })
       .object({
         agent_apk_url: z.string().trim().url().max(500),
         agent_checksum: z.string().trim().regex(/^[A-Za-z0-9_-]{40,60}$/, "Checksum looks wrong"),
+        // Google reads this as the account's long number ID, never an email —
+        // an email here makes the phone refuse every account after a reset.
         frp_account_id: z
           .string()
           .trim()
-          .toLowerCase()
-          .regex(/^([a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+)?$/, "Enter the shop Gmail address, e.g. shop@gmail.com")
+          .regex(/^([0-9]{15,25})?$/, "Enter the shop Google account number (digits only), not the email")
           .optional()
           .default(""),
       })

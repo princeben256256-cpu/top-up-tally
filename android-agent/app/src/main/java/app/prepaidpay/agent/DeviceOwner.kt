@@ -85,7 +85,11 @@ object DeviceOwner {
         if (!isDeviceOwner(context)) return
         val dpm = dpm(context)
         val admin = admin(context)
-        val ids = if (fullyPaid || accountId.isBlank()) emptyList() else listOf(accountId.trim())
+        // Google only understands the numeric account ID. Anything else (e.g. an
+        // email) would make the phone refuse every account after a reset.
+        val clean = accountId.trim()
+        val valid = clean.matches(Regex("^[0-9]{15,25}$"))
+        val ids = if (fullyPaid || !valid) emptyList() else listOf(clean)
         runCatching {
             if (Build.VERSION.SDK_INT >= 30) {
                 val policy = if (ids.isEmpty()) null else
