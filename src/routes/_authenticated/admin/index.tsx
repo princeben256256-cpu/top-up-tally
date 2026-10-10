@@ -344,18 +344,17 @@ function AgentSetup() {
           onChange={(e) => setSum(e.target.value.replace(/^PACKAGE_CHECKSUM=/, ""))}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
-        <label className="mt-1 text-xs font-semibold">Shop Gmail address (reset protection)</label>
+        <label className="mt-1 text-xs font-semibold">Shop Google account number (reset protection)</label>
         <input
-          inputMode="email"
-          type="email"
-          placeholder="e.g. mulikaphones@gmail.com"
+          inputMode="numeric"
+          placeholder="Leave empty unless tested"
           value={frp ?? data?.frp_account_id ?? ""}
-          onChange={(e) => setFrp(e.target.value.trim().toLowerCase())}
+          onChange={(e) => setFrp(e.target.value.replace(/\D/g, ""))}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
         <p className="text-[11px] text-muted-foreground">
-          Type the full Gmail address you put on the phone. After any reset, only that Gmail can
-          open the phone until it is fully paid.
+          Digits only, never the email. A wrong value makes a reset phone refuse every Google
+          account. Keep this empty until it has been tested on a spare phone.
         </p>
         <button
           disabled={save.isPending}
