@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Lock, Unlock, RotateCcw, Smartphone, Trash2, QrCode, Banknote, Send } from "lucide-react";
 import { toast } from "sonner";
-import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCustomer, getAgentSettings } from "@/lib/devices.functions";
+import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCustomer, getAgentSettings, setResetLock } from "@/lib/devices.functions";
 import { QRCodeSVG } from "qrcode.react";
 import { getCustomerKyc } from "@/lib/kyc.functions";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
@@ -205,6 +205,8 @@ function DeviceDetail() {
             Lock controls and device deletion are limited to admins.
           </p>
         )}
+
+        {isAdmin && <ResetLockSwitch id={id} on={!!(d as any).frp_enabled} />}
 
         <section className="mt-5 rounded-xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
@@ -435,6 +437,38 @@ function KycPanel({ id }: { id: string }) {
           </a>
         ) : null)}
       </div>
+    </section>
+  );
+}
+
+function ResetLockSwitch({ id, on }: { id: string; on: boolean }) {
+  const fn = useServerFn(setResetLock);
+  const qc = useQueryClient();
+  const m = useMutation({
+    mutationFn: (enabled: boolean) => fn({ data: { device_id: id, enabled } }),
+    onSuccess: () => {
+      toast.success("Saved. The phone picks it up on its next check-in.");
+      qc.invalidateQueries({ queryKey: ["device", id] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  return (
+    <section className="mt-5 rounded-xl border border-border bg-card p-4">
+      <h2 className="font-display text-sm font-semibold">Shop Gmail reset lock</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {on ? "ON: after a button reset this phone asks for the shop Gmail." : "OFF: a reset phone accepts any Google account."}
+        {" "}Turn it on only after the shop Gmail number is saved in Lock app setup.
+      </p>
+      <button
+        disabled={m.isPending}
+        onClick={() => {
+          if (!on && !confirm("Turn on the reset lock? Make sure you know the shop Gmail password.")) return;
+          m.mutate(!on);
+        }}
+        className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+      >
+        {on ? "Turn reset lock off" : "Turn reset lock on"}
+      </button>
     </section>
   );
 }

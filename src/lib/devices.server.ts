@@ -195,7 +195,7 @@ export async function lookupDevicePublic(query: string) {
 /** Device-agent heartbeat: authenticates with IMEI + enrollment secret. */
 export async function deviceHeartbeat(imei: string, secret: string) {
   const cols =
-    "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at";
+    "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at, frp_enabled";
   // Phones enrolled before an IMEI correction still send the old number
   // (e.g. 14 digits without the last check digit). The secret proves identity.
   const { data: rows, error } = await supabaseAdmin
@@ -221,7 +221,8 @@ export async function deviceHeartbeat(imei: string, secret: string) {
     .from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
   const balance = balanceOf(data as any);
   return {
-    frp_account_id: (settings as any)?.frp_account_id ?? "",
+    // Only phones switched on by an admin get the reset lock.
+    frp_account_id: (data as any).frp_enabled ? ((settings as any)?.frp_account_id ?? "") : "",
     fully_paid: Number(data.total_price) > 0 && balance <= 0,
     // Phone clock locks at this moment even with no internet (null = never auto-lock).
     lock_at: data.lock_override === "auto" && balance > 0 ? data.paid_until : null,

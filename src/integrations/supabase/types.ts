@@ -135,6 +135,7 @@ export type Database = {
           device_model: string | null
           enrolled_at: string | null
           enrollment_secret: string
+          frp_enabled: boolean
           id: string
           imei: string
           imei2: string | null
@@ -156,6 +157,7 @@ export type Database = {
           device_model?: string | null
           enrolled_at?: string | null
           enrollment_secret?: string
+          frp_enabled?: boolean
           id?: string
           imei: string
           imei2?: string | null
@@ -177,6 +179,7 @@ export type Database = {
           device_model?: string | null
           enrolled_at?: string | null
           enrollment_secret?: string
+          frp_enabled?: boolean
           id?: string
           imei?: string
           imei2?: string | null

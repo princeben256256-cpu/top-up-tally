@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as GmailNumberRouteImport } from './routes/gmail-number'
 import { Route as PayRouteImport } from './routes/pay'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
@@ -32,6 +33,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GmailNumberRoute = GmailNumberRouteImport.update({
+  id: '/gmail-number',
+  path: '/gmail-number',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PayRoute = PayRouteImport.update({
@@ -75,6 +81,7 @@ const ApiPublicIotecCallbackRoute = ApiPublicIotecCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gmail-number': typeof GmailNumberRoute
   '/pay': typeof PayRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/gmail-number': typeof GmailNumberRoute
   '/pay': typeof PayRoute
   '/reset-password': typeof ResetPasswordRoute
   '/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/gmail-number': typeof GmailNumberRoute
   '/pay': typeof PayRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/admin/$id': typeof AuthenticatedAdminIdRoute
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/gmail-number'
     | '/pay'
     | '/reset-password'
     | '/admin/$id'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/gmail-number'
     | '/pay'
     | '/reset-password'
     | '/admin/$id'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/gmail-number'
     | '/pay'
     | '/reset-password'
     | '/_authenticated/admin/$id'
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  GmailNumberRoute: typeof GmailNumberRoute
   PayRoute: typeof PayRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicDeviceHeartbeatRoute: typeof ApiPublicDeviceHeartbeatRoute
@@ -175,6 +188,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gmail-number': {
+      id: '/gmail-number'
+      path: '/gmail-number'
+      fullPath: '/gmail-number'
+      preLoaderRoute: typeof GmailNumberRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pay': {
@@ -248,6 +268,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  GmailNumberRoute: GmailNumberRoute,
   PayRoute: PayRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicDeviceHeartbeatRoute: ApiPublicDeviceHeartbeatRoute,
