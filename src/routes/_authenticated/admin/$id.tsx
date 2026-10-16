@@ -206,6 +206,8 @@ function DeviceDetail() {
           </p>
         )}
 
+        {isAdmin && <ResetLockSwitch id={id} on={!!(d as any).frp_enabled} />}
+
         <section className="mt-5 rounded-xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">
             <Send className="h-4 w-4 text-brand" /> Request mobile money payment

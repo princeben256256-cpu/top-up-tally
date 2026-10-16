@@ -160,3 +160,18 @@ export const saveAgentSettings = createServerFn({ method: "POST" })
     if (error) throw new Error("Only admins can change these settings");
     return { ok: true };
   });
+
+export const setResetLock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ device_id: z.string().uuid(), enabled: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    if (!isAdmin) throw new Error("Only admins can change the reset lock");
+    if (data.enabled) {
+      const { data: s } = await context.supabase.from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
+      if (!/^[0-9]{15,25}$/.test(s?.frp_account_id ?? "")) throw new Error("Save the shop Gmail number in Lock app setup first");
+    }
+    const { error } = await context.supabase.from("devices").update({ frp_enabled: data.enabled }).eq("id", data.device_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

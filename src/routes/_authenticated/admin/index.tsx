@@ -353,6 +353,7 @@ function AgentSetup() {
           className="rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
         <p className="text-[11px] text-muted-foreground">
+          <a href="/gmail-number" target="_blank" className="font-semibold text-brand underline">Get the shop Gmail number</a>{" "}
           Digits only, never the email. A wrong value makes a reset phone refuse every Google
           account. Keep this empty until it has been tested on a spare phone.
         </p>
