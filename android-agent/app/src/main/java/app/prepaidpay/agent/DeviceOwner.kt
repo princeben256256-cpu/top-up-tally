@@ -77,38 +77,48 @@ object DeviceOwner {
     }
 
     /**
-     * After any factory reset or flash, only the shop Google account can finish
-     * setup. Works even if the customer removed that account from Settings.
-     * Cleared automatically once the phone is fully paid.
+     * Requests Google FRP for untrusted resets on supported Android 11+ phones.
+     * This does not guarantee recovery or protection against firmware flashing.
+     * Removes our policy once fully paid; ordinary Google FRP can still apply.
      */
     fun applyResetProtection(context: Context, accountId: String, fullyPaid: Boolean) {
         if (!isDeviceOwner(context)) return
         val dpm = dpm(context)
         val admin = admin(context)
-        // Google only understands the numeric account ID. Anything else (e.g. an
-        // email) would make the phone refuse every account after a reset.
+        // Shape validation only: the ID must come from the Google identity sub.
         val clean = accountId.trim()
         val valid = clean.matches(Regex("^[0-9]{15,25}$"))
         val ids = if (fullyPaid || !valid) emptyList() else listOf(clean)
-        runCatching {
-            if (Build.VERSION.SDK_INT >= 30) {
+        if (Build.VERSION.SDK_INT >= 30) {
+            runCatching {
                 val policy = if (ids.isEmpty()) null else
                     android.app.admin.FactoryResetProtectionPolicy.Builder()
                         .setFactoryResetProtectionAccounts(ids)
                         .setFactoryResetProtectionEnabled(true)
                         .build()
                 dpm.setFactoryResetProtectionPolicy(admin, policy)
+                val applied = dpm.getFactoryResetProtectionPolicy(admin)
+                check(if (policy == null) applied == null else
+                    applied?.isFactoryResetProtectionEnabled == true &&
+                    applied.factoryResetProtectionAccounts == ids)
+            }.onFailure {
+                // Do not log the account ID. UnsupportedOperationException is
+                // the public API's support signal; no hidden APIs/reflection.
+                android.util.Log.w("MulikaFRP", "Reset protection could not be applied or read back", it)
             }
         }
-        // Older Android: Google Play services reads the same rule from here.
+        // Retire the unverified legacy enable path. Remove only our old key,
+        // preserving any unrelated Play services application restrictions.
         runCatching {
-            val b = android.os.Bundle()
-            if (ids.isNotEmpty()) b.putStringArray("factoryResetProtectionAdmin", ids.toTypedArray())
-            dpm.setApplicationRestrictions(admin, "com.google.android.gms", b)
-            context.sendBroadcast(
-                android.content.Intent("com.google.android.gms.auth.FRP_CONFIG_CHANGED")
-                    .setPackage("com.google.android.gms")
-            )
-        }
+            val b = dpm.getApplicationRestrictions(admin, "com.google.android.gms")
+            if (b.containsKey("factoryResetProtectionAdmin")) {
+                b.remove("factoryResetProtectionAdmin")
+                dpm.setApplicationRestrictions(admin, "com.google.android.gms", b)
+                context.sendBroadcast(
+                    android.content.Intent("com.google.android.gms.auth.FRP_CONFIG_CHANGED")
+                        .setPackage("com.google.android.gms")
+                )
+            }
+        }.onFailure { android.util.Log.w("MulikaFRP", "Legacy reset-policy cleanup failed", it) }
     }
 }

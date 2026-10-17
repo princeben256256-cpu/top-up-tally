@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { assertResetLockAllowed } from "./reset-protection";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
@@ -165,13 +166,15 @@ export const setResetLock = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ device_id: z.string().uuid(), enabled: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Only admins can change the reset lock");
+    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    assertResetLockAllowed(!roleError && isAdmin === true, false, "");
     if (data.enabled) {
-      const { data: s } = await context.supabase.from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
-      if (!/^[0-9]{15,25}$/.test(s?.frp_account_id ?? "")) throw new Error("Save the shop Gmail number in Lock app setup first");
+      const { data: s, error } = await context.supabase.from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
+      if (error) throw new Error("Could not read reset-lock settings");
+      assertResetLockAllowed(true, true, s?.frp_account_id ?? "");
     }
-    const { error } = await context.supabase.from("devices").update({ frp_enabled: data.enabled }).eq("id", data.device_id);
+    const { data: saved, error } = await context.supabase.from("devices").update({ frp_enabled: data.enabled }).eq("id", data.device_id).select("id").maybeSingle();
     if (error) throw new Error(error.message);
+    if (!saved) throw new Error("Device not found or access denied");
     return { ok: true };
   });
