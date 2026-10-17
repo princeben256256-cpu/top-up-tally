@@ -1,2 +1,3 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [ ] Finish and test Google account-number retrieval and reset-lock safety controls.
 - [ ] Re-enroll and re-test the repaired Samsung (QR enrollment, lock/unlock, offline lock, timer) — reset lock stays OFF until a separate cheap test phone passes it. Blocked on the technician finishing the repair.
