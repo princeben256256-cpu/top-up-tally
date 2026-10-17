@@ -9,6 +9,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { getCustomerKyc } from "@/lib/kyc.functions";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/lib/lock";
+import { Switch } from "@/components/ui/switch";
 
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
@@ -447,28 +448,30 @@ function ResetLockSwitch({ id, on }: { id: string; on: boolean }) {
   const m = useMutation({
     mutationFn: (enabled: boolean) => fn({ data: { device_id: id, enabled } }),
     onSuccess: () => {
-      toast.success("Saved. The phone picks it up on its next check-in.");
+      toast.success("Request saved. Keep the phone online; device application is not yet confirmed.");
       qc.invalidateQueries({ queryKey: ["device", id] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
   return (
-    <section className="mt-5 rounded-xl border border-border bg-card p-4">
+    <section className="mt-5 rounded-lg border border-border bg-card p-4">
       <h2 className="font-display text-sm font-semibold">Shop Gmail reset lock</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        {on ? "ON: after a button reset this phone asks for the shop Gmail." : "OFF: a reset phone accepts any Google account."}
-        {" "}Turn it on only after the shop Gmail number is saved in Lock app setup.
+        {on ? "ON requested — not proof of protection on the phone." : "OFF requested — ordinary Google reset verification may still apply."}
+        {" "}Only test on a spare phone. A wrong account or unsupported phone can leave it locked after reset. Changing this switch cannot recover an already-reset phone.
       </p>
-      <button
+      <div className="mt-3 flex items-center justify-between gap-3">
+      <label htmlFor="reset-lock" className="text-sm font-medium">Request reset protection</label>
+      <Switch
+        id="reset-lock"
+        checked={on}
         disabled={m.isPending}
-        onClick={() => {
-          if (!on && !confirm("Turn on the reset lock? Make sure you know the shop Gmail password.")) return;
-          m.mutate(!on);
+        onCheckedChange={(enabled) => {
+          if (enabled && !confirm("Use only a spare phone. Verify the shop Google account and password first. Recovery after reset is not guaranteed. Request protection?")) return;
+          m.mutate(enabled);
         }}
-        className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
-      >
-        {on ? "Turn reset lock off" : "Turn reset lock on"}
-      </button>
+      />
+      </div>
     </section>
   );
 }

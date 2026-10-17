@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { Button } from "@/components/ui/button";
+import { googleAccountInfo } from "@/lib/reset-protection";
 
 export const Route = createFileRoute("/gmail-number")({
   head: () => ({
@@ -20,57 +22,74 @@ export const Route = createFileRoute("/gmail-number")({
 
 function GmailNumber() {
   const [info, setInfo] = useState<{ email: string; id: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   async function read() {
-    const { data } = await supabase.auth.getUser();
-    const g = data.user?.identities?.find((i) => i.provider === "google");
-    const id = String((g?.identity_data as any)?.sub ?? (g as any)?.id ?? "");
-    setInfo(g ? { email: String((g.identity_data as any)?.email ?? ""), id } : null);
+    const { data, error } = await supabase.auth.getUser();
+    if (error && data.user) setError("Could not verify your Google account. Please try again.");
+    const verified = googleAccountInfo(data.user?.identities);
+    setInfo(verified);
+    if (data.user?.identities?.some((i) => i.provider === "google") && !verified) {
+      setError("Google did not return a valid account number. Reset protection must stay off.");
+    }
   }
   useEffect(() => {
-    read();
+    void read();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => { setTimeout(() => void read(), 0); });
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/gmail-number`,
-      extraParams: { prompt: "select_account" },
-    });
-    if (r.error) return toast.error("Google sign-in failed");
-    if (!r.redirected) read();
+    setBusy(true);
+    setError("");
+    try {
+      const r = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/gmail-number`,
+        extraParams: { prompt: "select_account" },
+      });
+      if (r.error) throw new Error("Google sign-in failed. Please try again.");
+      if (!r.redirected) await read();
+    } catch {
+      setError("Google sign-in failed. Please try again.");
+    } finally { setBusy(false); }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6">
+      <div className="w-full max-w-sm rounded-lg border border-border bg-card p-6">
         <h1 className="font-display text-xl font-semibold">Shop Gmail number</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Sign in with the shop Gmail. Google will show its number here.
         </p>
+        {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
         {info ? (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground">{info.email}</p>
             <p className="mt-1 break-all rounded-lg bg-muted p-3 font-mono text-lg font-semibold">{info.id}</p>
-            <button
-              onClick={() => navigator.clipboard.writeText(info.id).then(() => toast.success("Copied"))}
-              className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground"
+            <Button
+              onClick={() => navigator.clipboard.writeText(info.id).then(() => toast.success("Copied")).catch(() => toast.error("Could not copy. Select the number above."))}
+              className="mt-3 w-full"
             >
               Copy number
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={async () => {
-                await supabase.auth.signOut();
+                const { error } = await supabase.auth.signOut();
+                if (error) return toast.error("Could not sign out. Please try again.");
                 window.location.href = "/auth";
               }}
-              className="mt-2 w-full rounded-lg border border-border py-2 text-sm font-semibold"
+              className="mt-2 h-auto w-full whitespace-normal"
             >
               Sign out, then sign in as admin to paste it
-            </button>
+            </Button>
+            <p className="mt-3 text-xs text-muted-foreground">This number identifies the signed-in account. It does not prove that a reset phone will accept it. Keep protection off until a spare-phone test passes.</p>
           </div>
         ) : (
-          <button onClick={google} className="mt-4 w-full rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground">
-            Sign in with Google
-          </button>
+          <Button onClick={google} disabled={busy} className="mt-4 w-full">
+            {busy ? "Signing in…" : "Sign in with Google"}
+          </Button>
         )}
       </div>
     </div>

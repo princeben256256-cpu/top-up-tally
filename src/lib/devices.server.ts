@@ -4,7 +4,7 @@ import { addDays, daysForAmount, isLocked, balanceOf } from "./lock";
 type AnyClient = { from: (t: string) => any };
 
 const DEVICE_PUBLIC_COLUMNS =
-  "id, imei, imei2, phone_number, customer_name, device_model, total_price, deposit_paid, daily_rate, amount_paid, paid_until, lock_override, lock_message, enrolled_at, last_seen_at, created_at";
+  "id, imei, imei2, phone_number, customer_name, device_model, total_price, deposit_paid, daily_rate, amount_paid, paid_until, lock_override, lock_message, enrolled_at, last_seen_at, created_at, frp_enabled";
 
 export async function listDevicesFor(client: AnyClient) {
   const { data, error } = await client
