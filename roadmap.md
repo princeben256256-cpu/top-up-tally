@@ -1,3 +1,6 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
-- [ ] Finish and test Google account-number retrieval and reset-lock safety controls.
+- [x] Finish account-number validation and reset-lock safety controls; six unit tests and authenticated cancellation/missing-number checks passed.
+- [ ] Verify shop Google login returns its numeric account ID — blocked on the user completing Google sign-in; no shop Google session available.
+- [ ] Verify new Android APK builds and installs — blocked on GitHub build and a physical phone; Android SDK is unavailable here.
+- [ ] Test reset recovery on one spare supported phone — blocked on a physical phone and verified shop Google account; keep all reset-lock switches OFF.
 - [ ] Re-enroll and re-test the repaired Samsung (QR enrollment, lock/unlock, offline lock, timer) — reset lock stays OFF until a separate cheap test phone passes it. Blocked on the technician finishing the repair.

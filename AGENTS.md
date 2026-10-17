@@ -14,3 +14,4 @@
 - Lock app: never show/relaunch the lock while the screen is off or the pay page/emergency dialer is open; it appears on screen-on instead. Why: lets the phone sleep and keeps payment uninterrupted.
 - Reset-lock requests are admin-checked server-side; Google account extraction accepts only the Google identity's numeric sub, never identity UUIDs. Why: reject wrong identifiers and unauthorized policy changes.
 - Reset-lock UI reports requested configuration, not confirmed hardware protection. Why: successful saving or heartbeat does not prove post-reset recovery.
+- Android reset policy uses only public Android 11+ policy APIs with readback and logged failures; no legacy enable or hidden support APIs. Why: unsupported methods can break builds or silently claim protection.
