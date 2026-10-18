@@ -64,6 +64,13 @@
       "when": 1792182375965,
       "tag": "0008_device_frp_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792301728883,
+      "tag": "0009_atomic_iotec_credit",
+      "breakpoints": true
     }
   ]
 }

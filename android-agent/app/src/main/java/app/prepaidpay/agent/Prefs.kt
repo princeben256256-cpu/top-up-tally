@@ -72,13 +72,7 @@ object Prefs {
 
     /** Server is the authority; offline the phone clock locks it when paid time ends. */
     fun shouldLock(c: Context): Boolean {
-        if (!isEnrolled(c)) return false
-        if (locked(c)) return true
-        val at = lockAt(c)
-        if (at > 0L && safeNow(c) >= at) return true
-        val last = lastOk(c)
-        if (last == 0L) return false
-        return safeNow(c) - last > OFFLINE_GRACE_MS
+        return OfflineLockRule.shouldLock(isEnrolled(c), locked(c), lockAt(c), safeNow(c))
     }
 
     fun countdownText(c: Context): String {
