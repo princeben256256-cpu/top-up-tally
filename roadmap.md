@@ -3,6 +3,7 @@
 - [x] Verify downloaded APK checksum, save/read back setup settings, check authenticated admin and customer website flows, and request publication.
 - [x] Finish account-number validation and reset-lock safety controls; six unit tests and authenticated cancellation/missing-number checks passed.
 - [x] Verify shop Google identity stores a numeric sub (not an identity UUID); Google sign-in has been completed by the user.
-- [ ] Verify corrected Android APK builds and installs — requires a fresh GitHub build containing the offline-lock correction and a physical phone; Android SDK is unavailable here.
+- [x] Verify corrected Android build: user's run #20 shows unit tests and APK tasks succeeded; latest release downloaded and checksum saved on 18 October 2026.
+- [ ] Verify corrected APK installs on repaired Samsung — requires user-run QR enrollment on the physical phone.
 - [ ] Test reset recovery on one spare supported phone — blocked on a physical phone and verified shop Google account; keep all reset-lock switches OFF.
 - [ ] Re-enroll and re-test the repaired Samsung (QR enrollment, lock/unlock, offline lock, timer, sleep, uninterrupted payment) — phone returned; requires corrected APK build/checksum and user-run physical tests. Reset lock stays OFF until a separate spare phone passes recovery testing.
