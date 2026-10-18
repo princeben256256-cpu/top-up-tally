@@ -1,4 +1,6 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [ ] Check Google sign-in admin access and advise whether repaired test phone can be re-enrolled.
+- [ ] Verify latest APK checksum, update setup settings, check website flows, and publish requested changes.
 - [x] Finish account-number validation and reset-lock safety controls; six unit tests and authenticated cancellation/missing-number checks passed.
 - [ ] Verify shop Google login returns its numeric account ID — blocked on the user completing Google sign-in; no shop Google session available.
 - [ ] Verify new Android APK builds and installs — blocked on GitHub build and a physical phone; Android SDK is unavailable here.
