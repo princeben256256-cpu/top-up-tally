@@ -42,7 +42,7 @@ jobs:
           gradle-version: "8.11.1"
 
       - name: Build debug + release APK
-        run: gradle assembleDebug assembleRelease --no-daemon
+        run: gradle testDebugUnitTest assembleDebug assembleRelease --no-daemon
 
       - name: Compute device-owner provisioning checksum
         run: |

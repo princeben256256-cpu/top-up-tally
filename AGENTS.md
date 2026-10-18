@@ -15,3 +15,5 @@
 - Reset-lock requests are admin-checked server-side; Google account extraction accepts only the Google identity's numeric sub, never identity UUIDs. Why: reject wrong identifiers and unauthorized policy changes.
 - Reset-lock UI reports requested configuration, not confirmed hardware protection. Why: successful saving or heartbeat does not prove post-reset recovery.
 - Android reset policy uses only public Android 11+ policy APIs with readback and logged failures; no legacy enable or hidden support APIs. Why: unsupported methods can break builds or silently claim protection.
+- Mobile-money callbacks are hints only; confirm status against the stored transaction through IoTec and credit using a service-only atomic database function. Why: forged callbacks and partial writes must not change balances.
+- Offline enforcement uses the cached server lock and deadline; a cleared deadline never acquires a grace-period lock. Why: fully paid and force-unlocked phones must remain usable offline.

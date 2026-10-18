@@ -1,8 +1,8 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { addDays, daysForAmount, balanceOf } from "./lock";
+import { balanceOf } from "./lock";
 
-const ID_BASE = process.env.IOTEC_ID_URL || "https://id.iotec.io";
-const PAY_BASE = process.env.IOTEC_PAY_URL || "https://pay.iotec.io";
+function idBase() { return process.env.IOTEC_ID_URL || "https://id.iotec.io"; }
+function payBase() { return process.env.IOTEC_PAY_URL || "https://pay.iotec.io"; }
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
@@ -20,7 +20,7 @@ async function getAccessToken() {
     scope: "profile",
   });
 
-  const res = await fetch(`${ID_BASE}/connect/token`, {
+  const res = await fetch(`${idBase()}/connect/token`, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body,
@@ -40,7 +40,7 @@ async function getAccessToken() {
 
 async function payFetch(path: string, init: RequestInit = {}) {
   const token = await getAccessToken();
-  const res = await fetch(`${PAY_BASE}${path}`, {
+  const res = await fetch(`${payBase()}${path}`, {
     ...init,
     headers: {
       "content-type": "application/json",
@@ -98,7 +98,7 @@ export async function startCollection(input: {
   const payer = normalizePhone(input.phone);
   if (payer.length < 12) throw new Error("Enter a valid mobile money number");
 
-  const externalId = `pp-${device.id.slice(0, 8)}-${Date.now()}`;
+  const externalId = `pp-${crypto.randomUUID()}`;
 
   const { error: insErr } = await supabaseAdmin.from("payment_intents").insert({
     device_id: device.id,
@@ -200,69 +200,17 @@ export async function refreshIntent(externalId: string) {
 
 /** Credits a successful collection to the device exactly once. */
 export async function applySuccessfulIntent(externalId: string) {
-  const { data: intent } = await supabaseAdmin
-    .from("payment_intents")
-    .select("id, device_id, amount, applied, initiated_by")
-    .eq("external_id", externalId)
-    .maybeSingle();
-  if (!intent || intent.applied) return;
-
-  // Claim the intent first so concurrent callback + poll cannot double-credit.
-  const { data: claimed } = await supabaseAdmin
-    .from("payment_intents")
-    .update({ applied: true, status: "successful" })
-    .eq("id", intent.id)
-    .eq("applied", false)
-    .select("id")
-    .maybeSingle();
-  if (!claimed) return;
-
-  const { data: device } = await supabaseAdmin
-    .from("devices")
-    .select("id, daily_rate, amount_paid, paid_until")
-    .eq("id", intent.device_id)
-    .maybeSingle();
-  if (!device) return;
-
-  const amount = Number(intent.amount);
-  const days = daysForAmount(amount, Number(device.daily_rate));
-  const base = new Date(Math.max(new Date(device.paid_until).getTime(), Date.now()));
-  const nextPaidUntil = addDays(base, days);
-
-  await supabaseAdmin.from("payments").insert({
-    device_id: device.id,
-    amount,
-    method: "iotec",
-    note: `iotec ${externalId}`,
-    days_added: days,
-    recorded_by: intent.initiated_by ?? null,
-  });
-
-  await supabaseAdmin
-    .from("devices")
-    .update({
-      amount_paid: Number(device.amount_paid) + amount,
-      paid_until: nextPaidUntil.toISOString(),
-      lock_override: "auto",
-    })
-    .eq("id", device.id);
+  const { error } = await supabaseAdmin.rpc("apply_iotec_intent", { p_external_id: externalId });
+  if (error) throw new Error("Payment confirmed but credit is pending. Please refresh; do not pay again.");
 }
 
 /** Handles an iotec webhook payload. */
 export async function handleIotecCallback(payload: Record<string, any>) {
-  const externalId: string | undefined = payload.externalId ?? payload.external_id;
-  if (!externalId) return { ok: false, reason: "missing_external_id" };
-
-  const status = mapStatus(payload.status);
-  await supabaseAdmin
-    .from("payment_intents")
-    .update({
-      status,
-      status_message: payload.statusMessage ?? payload.status_message ?? null,
-      iotec_id: payload.id ?? null,
-    })
-    .eq("external_id", externalId);
-
-  if (status === "successful") await applySuccessfulIntent(externalId);
-  return { ok: true, status };
+  const externalId: unknown = payload.externalId ?? payload.external_id;
+  if (typeof externalId !== "string" || externalId.length < 6 || externalId.length > 80) return { ok: false, reason: "invalid_external_id" };
+  // A callback is only a wake-up hint. Never trust its status, ID or amount:
+  // refresh using the stored transaction ID and authenticated provider API.
+  const verified = await refreshIntent(externalId);
+  if (!verified) return { ok: false, reason: "unknown_payment" };
+  return { ok: true, status: verified.status };
 }
