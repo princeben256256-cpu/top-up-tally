@@ -58,6 +58,8 @@ class HeartbeatWorker(appContext: Context, params: WorkerParameters) :
         fun showLock(context: Context) {
             // Never interrupt the customer while the payment page or emergency dialer is open.
             if (PayActivity.open || LockActivity.outsideAllowed) return
+            // Already showing: relaunching it pauses it and drops the customer's taps.
+            if (LockActivity.visible) return
             // Screen off: let the phone sleep. The lock appears the moment the
             // screen turns on (KeepAliveService listens for that).
             if (!screenOn(context)) return
