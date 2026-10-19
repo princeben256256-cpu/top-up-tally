@@ -21,6 +21,9 @@ class LockActivity : AppCompatActivity() {
     companion object {
         /** True while the customer is in the emergency dialer — don't cover it. */
         @Volatile var outsideAllowed = false
+        /** True while the lock is on screen, so nobody re-launches it on top of
+         *  itself (that pause/resume loop swallowed every tap). */
+        @Volatile var visible = false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +38,10 @@ class LockActivity : AppCompatActivity() {
 
         render()
 
-        findViewById<Button>(R.id.refresh).setOnClickListener { refreshNow() }
+        findViewById<Button>(R.id.refresh).setOnClickListener {
+            android.widget.Toast.makeText(this, "Checking payment…", android.widget.Toast.LENGTH_SHORT).show()
+            refreshNow(userAsked = true)
+        }
         findViewById<Button>(R.id.pay).setOnClickListener {
             PayActivity.open = true
             runCatching { startActivity(Intent(this, PayActivity::class.java)) }
@@ -59,6 +65,11 @@ class LockActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        visible = true
+    }
+
     override fun onResume() {
         super.onResume()
         outsideAllowed = false
@@ -66,7 +77,7 @@ class LockActivity : AppCompatActivity() {
         refreshNow()
     }
 
-    private fun refreshNow() {
+    private fun refreshNow(userAsked: Boolean = false) {
         val imei = Prefs.imei(this) ?: return
         val secret = Prefs.secret(this) ?: return
         lifecycleScope.launch {
@@ -79,6 +90,11 @@ class LockActivity : AppCompatActivity() {
                 finish()
             } else {
                 render()
+                if (userAsked) android.widget.Toast.makeText(
+                    this@LockActivity,
+                    if (status == null) "No internet — try again" else "Not paid yet. Tap Pay now.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
             }
         }
     }
@@ -94,8 +110,11 @@ class LockActivity : AppCompatActivity() {
         relock()
     }
 
-    override fun onPause() {
-        super.onPause()
+    // onStop, not onPause: Android pauses the lock just to deliver its own
+    // relaunch, and relocking there looped forever and froze the buttons.
+    override fun onStop() {
+        super.onStop()
+        visible = false
         relock()
     }
 

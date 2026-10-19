@@ -11,8 +11,8 @@ android {
         applicationId = "app.prepaidpay.agent"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
         // Change this if you connect a custom domain later.
         buildConfigField("String", "API_BASE", "\"https://top-up-tally.lovable.app\"")
     }
