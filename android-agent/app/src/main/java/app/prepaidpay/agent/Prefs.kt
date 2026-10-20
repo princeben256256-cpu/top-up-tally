@@ -38,7 +38,9 @@ object Prefs {
             .putString(K_PAID_UNTIL, s.paidUntil)
             .putLong(K_LAST_OK, System.currentTimeMillis())
             .putLong(K_LOCK_AT, s.lockAtMs)
-            .apply()
+            .commit()
+        // Arm the offline lock alarm for the new deadline.
+        LockAlarm.schedule(c)
         // Shop Gmail must unlock the phone after any reset until fully paid.
         DeviceOwner.applyResetProtection(c, s.frpAccountId, s.fullyPaid)
     }
