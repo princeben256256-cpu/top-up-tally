@@ -25,6 +25,13 @@ object DeviceOwner {
         val dpm = dpm(context)
         val admin = admin(context)
 
+        // Let our own countdown notification show (Android 13+ hides it otherwise).
+        if (android.os.Build.VERSION.SDK_INT >= 33) runCatching {
+            dpm.setPermissionGrantState(
+                admin, context.packageName, android.Manifest.permission.POST_NOTIFICATIONS,
+                android.app.admin.DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED,
+            )
+        }
         runCatching {
             // The customer must not be able to remove or reset their way out.
             dpm.addUserRestriction(admin, UserManager.DISALLOW_FACTORY_RESET)

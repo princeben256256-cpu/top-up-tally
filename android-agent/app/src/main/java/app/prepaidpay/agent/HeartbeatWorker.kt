@@ -38,13 +38,10 @@ class HeartbeatWorker(appContext: Context, params: WorkerParameters) :
         private const val NAME = "prepaidpay-heartbeat"
 
         fun schedule(context: Context) {
+            // No network requirement: offline runs must still enforce the clock lock.
             val request = PeriodicWorkRequestBuilder<HeartbeatWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(
-                    Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.CONNECTED)
-                        .build()
-                )
                 .build()
+            LockAlarm.schedule(context)
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 NAME,
                 ExistingPeriodicWorkPolicy.UPDATE,
