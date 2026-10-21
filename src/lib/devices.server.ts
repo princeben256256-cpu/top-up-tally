@@ -205,8 +205,23 @@ export async function deviceHeartbeat(imei: string, secret: string) {
     .eq("enrollment_secret", secret)
     .limit(1);
   if (error) throw new Error(error.message);
-  const data = rows?.[0];
+  let data = rows?.[0];
   if (!data || data.enrollment_secret !== secret) return null;
+
+  // Mobile-money approvals can finish after the payer closed the page.
+  // Re-check this phone's recent waiting payments so the credit still lands.
+  const since = new Date(Date.now() - 48 * 3600_000).toISOString();
+  const { data: pending } = await supabaseAdmin
+    .from("payment_intents").select("external_id")
+    .eq("device_id", data.id).eq("status", "pending").gte("created_at", since).limit(5);
+  if (pending?.length) {
+    const { refreshIntent } = await import("./iotec.server");
+    for (const p of pending) {
+      try { await refreshIntent(p.external_id); } catch (e) { console.error("[heartbeat] pending check", (e as Error).message); }
+    }
+    const { data: fresh } = await supabaseAdmin.from("devices").select(cols).eq("id", data.id).maybeSingle();
+    if (fresh) data = fresh as typeof data;
+  }
 
   await supabaseAdmin
     .from("devices")
