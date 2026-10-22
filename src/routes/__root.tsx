@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { InstallStaffApp } from "@/components/InstallStaffApp";
 
 function NotFoundComponent() {
   return (
@@ -90,8 +91,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "MULIKA — Check your phone payment plan" },
       { name: "twitter:description", content: "Enter your IMEI or phone number to see your balance, next due date and whether your device is unlocked." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/37a5c5ce-46e5-49a7-a1fa-0aa66e66d50e" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/37a5c5ce-46e5-49a7-a1fa-0aa66e66d50e" },
     ],
     links: [
       {
@@ -134,6 +133,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <InstallStaffApp />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />

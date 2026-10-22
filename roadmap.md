@@ -1,4 +1,5 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [x] Restore the visible staff home-screen install button and verify browser prompt, fallback, and installed state.
 - [x] Check Google sign-in admin access: shop Google account has no staff role; existing owner account remains admin.
 - [x] Verify downloaded APK checksum, save/read back setup settings, check authenticated admin and customer website flows, and request publication.
 - [x] Finish account-number validation and reset-lock safety controls; six unit tests and authenticated cancellation/missing-number checks passed.
