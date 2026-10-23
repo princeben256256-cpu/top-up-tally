@@ -66,12 +66,23 @@ object DeviceOwner {
     }
 
     /** Called only from the lock screen so the customer can't leave it. */
-    fun enterKiosk(activity: android.app.Activity) {
-        if (!isDeviceOwner(activity)) return
-        runCatching {
-            dpm(activity).setStatusBarDisabled(admin(activity), true)
-            activity.startLockTask()
-        }
+    fun enterKiosk(activity: android.app.Activity): Boolean {
+        val policy = dpm(activity)
+        return KioskEntry.enter(
+            owner = policy.isDeviceOwnerApp(activity.packageName),
+            start = {
+                check(policy.isLockTaskPermitted(activity.packageName)) {
+                    "Agent is not allowed to enter lock task"
+                }
+                activity.startLockTask()
+            },
+            isLocked = {
+                val manager = activity.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                manager.lockTaskModeState == android.app.ActivityManager.LOCK_TASK_MODE_LOCKED
+            },
+            restrictStatusBar = { policy.setStatusBarDisabled(admin(activity), true) },
+            failed = { android.util.Log.w("MulikaLock", "Kiosk enforcement failed", it) },
+        )
     }
 
     fun exitKiosk(activity: android.app.Activity) {

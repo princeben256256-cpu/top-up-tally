@@ -18,3 +18,4 @@
 - Mobile-money callbacks are hints only; confirm status against the stored transaction through IoTec and credit using a service-only atomic database function. Why: forged callbacks and partial writes must not change balances.
 - Offline enforcement uses the cached server lock and deadline; a cleared deadline never acquires a grace-period lock. Why: fully paid and force-unlocked phones must remain usable offline.
 - Staff installation is handled by one root-mounted control on staff pages, using the browser install prompt with manual home-screen fallback; standalone windows hide it to avoid duplicate installation prompts.
+- Android kiosk entry verifies LOCK_TASK_MODE_LOCKED, retries on return, and treats status-bar restrictions independently; report owner/enforcement failures rather than claiming a visible app equals a device lock.

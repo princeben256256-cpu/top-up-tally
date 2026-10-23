@@ -1,4 +1,6 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [x] Separate optional status-bar failure from kiosk start, verify Android locked mode, retry entry, and report owner/enforcement failure — eight Kotlin lock/offline tests passed.
+- [ ] Verify full-phone lock on Samsung — blocked on new GitHub APK build/install and physical Home/Recents/payment/sleep tests; phone currently has Force unlock selected.
 - [x] Restore the visible staff home-screen install button and verify browser prompt, fallback, and installed state.
 - [x] Check Google sign-in admin access: shop Google account has no staff role; existing owner account remains admin.
 - [x] Verify downloaded APK checksum, save/read back setup settings, check authenticated admin and customer website flows, and request publication.
