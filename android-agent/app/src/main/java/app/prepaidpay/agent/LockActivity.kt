@@ -26,11 +26,13 @@ class LockActivity : AppCompatActivity() {
         @Volatile var visible = false
     }
 
+    private var kioskOn = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lock)
 
-        DeviceOwner.enterKiosk(this)
+        kioskOn = DeviceOwner.enterKiosk(this)
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { /* swallowed */ }
@@ -100,7 +102,13 @@ class LockActivity : AppCompatActivity() {
     }
 
     private fun render() {
-        findViewById<TextView>(R.id.message).text = Prefs.message(this)
+        // Tell staff honestly when Android is not letting the lock block other apps.
+        val warning = when {
+            !DeviceOwner.isDeviceOwner(this) -> "\n\nSTAFF: full lock NOT ACTIVE (phone not set up by QR)."
+            !kioskOn -> "\n\nSTAFF: full lock failed to start."
+            else -> ""
+        }
+        findViewById<TextView>(R.id.message).text = Prefs.message(this) + warning
         findViewById<TextView>(R.id.balance).text = "Balance: UGX ${Prefs.balance(this)}"
         findViewById<TextView>(R.id.paidUntil).text = "Paid until: ${Prefs.paidUntil(this)}"
     }

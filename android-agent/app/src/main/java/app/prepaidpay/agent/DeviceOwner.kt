@@ -66,12 +66,12 @@ object DeviceOwner {
     }
 
     /** Called only from the lock screen so the customer can't leave it. */
-    fun enterKiosk(activity: android.app.Activity) {
-        if (!isDeviceOwner(activity)) return
-        runCatching {
+    fun enterKiosk(activity: android.app.Activity): Boolean {
+        if (!isDeviceOwner(activity)) return false
+        return runCatching {
             dpm(activity).setStatusBarDisabled(admin(activity), true)
             activity.startLockTask()
-        }
+        }.onFailure { android.util.Log.w("MulikaLock", "Kiosk lock failed", it) }.isSuccess
     }
 
     fun exitKiosk(activity: android.app.Activity) {
