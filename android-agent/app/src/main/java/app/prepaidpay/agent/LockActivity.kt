@@ -75,6 +75,8 @@ class LockActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         outsideAllowed = false
+        // Re-check Android enforcement when returning to an existing lock task.
+        if (Prefs.shouldLock(this)) kioskOn = DeviceOwner.enterKiosk(this)
         // Back from the payment page or screen just turned on: check right away.
         refreshNow()
     }
@@ -91,6 +93,8 @@ class LockActivity : AppCompatActivity() {
                 DeviceOwner.exitKiosk(this@LockActivity)
                 finish()
             } else {
+                // A policy failure must not leave a visible but unenforced lock.
+                if (!kioskOn) kioskOn = DeviceOwner.enterKiosk(this@LockActivity)
                 render()
                 if (userAsked) android.widget.Toast.makeText(
                     this@LockActivity,

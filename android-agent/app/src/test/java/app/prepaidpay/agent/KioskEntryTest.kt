@@ -21,7 +21,7 @@ class KioskEntryTest {
         assertEquals(0, calls)
     }
 
-    @Test funScreenPinningIsNotFullPhoneLock() {
+    @Test fun screenPinningIsNotFullPhoneLock() {
         assertFalse(KioskEntry.enter(true, {}, { false }, { throw AssertionError("must not run") }, {}))
     }
 
