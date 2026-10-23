@@ -1,4 +1,5 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [ ] Diagnose and correct device-wide lock enforcement after QR reset — verify kiosk state and retain sleep/payment safeguards; physical Samsung verification required.
 - [x] Restore the visible staff home-screen install button and verify browser prompt, fallback, and installed state.
 - [x] Check Google sign-in admin access: shop Google account has no staff role; existing owner account remains admin.
 - [x] Verify downloaded APK checksum, save/read back setup settings, check authenticated admin and customer website flows, and request publication.
