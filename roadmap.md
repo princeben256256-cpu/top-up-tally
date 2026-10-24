@@ -1,4 +1,6 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
+- [ ] Correct customer countdown for automatic, forced unlock, fully paid and expired states; verify staff labels do not claim physical enforcement.
+- [ ] Compare the downloadable APK with the corrected kiosk code and check current Samsung instructions without changing its payment or reset protection.
 - [x] Separate optional status-bar failure from kiosk start, verify Android locked mode, retry entry, and report owner/enforcement failure — eight Kotlin lock/offline tests passed.
 - [ ] Verify full-phone lock on Samsung — blocked on new GitHub APK build/install and physical Home/Recents/payment/sleep tests; phone currently has Force unlock selected.
 - [x] Restore the visible staff home-screen install button and verify browser prompt, fallback, and installed state.
