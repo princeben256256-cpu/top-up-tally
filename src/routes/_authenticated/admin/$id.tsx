@@ -8,7 +8,7 @@ import { getDevice, recordPayment, setLock, getMyRole, deleteDevice, assignCusto
 import { QRCodeSVG } from "qrcode.react";
 import { getCustomerKyc } from "@/lib/kyc.functions";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
-import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked } from "@/lib/lock";
+import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked, lockSchedule } from "@/lib/lock";
 import { Switch } from "@/components/ui/switch";
 
 
@@ -48,6 +48,7 @@ function DeviceDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["device", id],
     queryFn: () => fetchDevice({ data: { id } }),
+    refetchInterval: 20_000,
   });
 
   const promptMutation = useMutation({
@@ -99,7 +100,7 @@ function DeviceDetail() {
     mutationFn: (mode: "auto" | "locked" | "unlocked") =>
       lock({ data: { device_id: id, lock_override: mode } }),
     onSuccess: () => {
-      toast.success("Lock state updated");
+      toast.success("Instruction saved — physical phone enforcement is not confirmed.");
       qc.invalidateQueries({ queryKey: ["device", id] });
       qc.invalidateQueries({ queryKey: ["devices"] });
     },
@@ -133,7 +134,7 @@ function DeviceDetail() {
               </p>
             </div>
             <span className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${locked ? "bg-white/15 text-white" : "bg-white/15 text-white"}`}>
-              {locked ? "LOCKED" : `UNLOCKED · ${Math.max(0, daysRemaining(d.paid_until))}d`}
+              {locked ? "LOCK REQUESTED" : lockSchedule(d).kind === "unlocked" ? "STAFF UNLOCK" : lockSchedule(d).kind === "paid" ? "FULLY PAID" : `ACCESS ALLOWED · ${Math.max(0, daysRemaining(d.paid_until))}d`}
             </span>
           </div>
 
@@ -375,8 +376,8 @@ function SetupQr({ device }: { device: any }) {
   const payload = ready
     ? JSON.stringify({
         "android.app.extra.PROVISIONING_DEVICE_ADMIN_COMPONENT_NAME": "app.prepaidpay.agent/.AgentAdminReceiver",
-        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": data!.agent_apk_url,
-        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": data!.agent_checksum,
+        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_DOWNLOAD_LOCATION": data?.agent_apk_url,
+        "android.app.extra.PROVISIONING_DEVICE_ADMIN_PACKAGE_CHECKSUM": data?.agent_checksum,
         "android.app.extra.PROVISIONING_LEAVE_ALL_SYSTEM_APPS_ENABLED": true,
         "android.app.extra.PROVISIONING_SKIP_ENCRYPTION": false,
         "android.app.extra.PROVISIONING_ADMIN_EXTRAS_BUNDLE": {

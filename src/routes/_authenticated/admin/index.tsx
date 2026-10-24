@@ -6,7 +6,7 @@ import { Plus, Search, ShieldCheck, Lock, Smartphone, Wallet, Package, LogOut } 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { listDevices, createDevice, getMyRole, getAgentSettings, saveAgentSettings } from "@/lib/devices.functions";
-import { isLocked, balanceOf, formatMoney, daysRemaining } from "@/lib/lock";
+import { isLocked, balanceOf, formatMoney, daysRemaining, lockSchedule } from "@/lib/lock";
 import { AgentsPanel } from "@/components/AgentsPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
@@ -51,6 +51,7 @@ function AdminHome() {
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: () => fetchDevices({}),
+    refetchInterval: 20_000,
   });
 
 
@@ -123,7 +124,7 @@ function AdminHome() {
 
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <HeadStat icon={<Smartphone className="h-4 w-4" />} label="Devices" value={String(devices.length)} />
-            <HeadStat icon={<Lock className="h-4 w-4" />} label="Locked" value={String(lockedCount)} tone={lockedCount > 0 ? "warn" : "ok"} />
+            <HeadStat icon={<Lock className="h-4 w-4" />} label="Lock requested" value={String(lockedCount)} tone={lockedCount > 0 ? "warn" : "ok"} />
             <HeadStat icon={<Package className="h-4 w-4" />} label="In stock" value={String(stockCount)} />
             <HeadStat icon={<Wallet className="h-4 w-4" />} label="Collected" value={formatMoney(collected)} />
           </div>
@@ -268,7 +269,7 @@ function AdminHome() {
                 <div className="shrink-0 text-right">
                   <p className="font-display text-sm font-semibold">{formatMoney(balanceOf(d))}</p>
                   <p className={`mt-0.5 text-[11px] font-medium ${locked ? "text-destructive" : "text-muted-foreground"}`}>
-                    {locked ? "Locked" : `${Math.max(0, daysRemaining(d.paid_until))}d left`}
+                    {locked ? "Lock requested" : lockSchedule(d).kind === "unlocked" ? "Staff unlock" : lockSchedule(d).kind === "paid" ? "Fully paid" : `${Math.max(0, daysRemaining(d.paid_until))}d left`}
                   </p>
                 </div>
               </button>

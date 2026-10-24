@@ -15,7 +15,23 @@ export function isLocked(d: DeviceLockInput, now = new Date()) {
   if (d.lock_override === "locked") return true;
   if (d.lock_override === "unlocked") return false;
   if (balanceOf(d) <= 0) return false;
-  return new Date(d.paid_until).getTime() < now.getTime();
+  return new Date(d.paid_until).getTime() <= now.getTime();
+}
+
+/** A cleared deadline must never display a countdown or create an offline lock. */
+export function lockDeadline(d: DeviceLockInput): string | null {
+  return d.lock_override === "auto" && balanceOf(d) > 0 ? d.paid_until : null;
+}
+
+export function lockSchedule(d: DeviceLockInput, now = new Date()) {
+  if (d.lock_override === "locked") return { kind: "locked" as const, minutes: 0 };
+  if (d.lock_override === "unlocked") return { kind: "unlocked" as const, minutes: 0 };
+  if (balanceOf(d) <= 0) return { kind: "paid" as const, minutes: 0 };
+  const deadline = lockDeadline(d);
+  const remaining = deadline ? new Date(deadline).getTime() - now.getTime() : NaN;
+  if (!Number.isFinite(remaining)) return { kind: "unknown" as const, minutes: 0 };
+  if (remaining <= 0) return { kind: "due" as const, minutes: 0 };
+  return { kind: "countdown" as const, minutes: Math.ceil(remaining / 60_000) };
 }
 
 export function daysRemaining(paidUntil: string, now = new Date()) {
