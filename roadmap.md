@@ -1,8 +1,8 @@
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
-- [ ] Correct customer countdown for automatic, forced unlock, fully paid and expired states; verify staff labels do not claim physical enforcement.
-- [ ] Compare the downloadable APK with the corrected kiosk code and check current Samsung instructions without changing its payment or reset protection.
+- [x] Correct customer countdown for automatic, forced unlock, fully paid and expired states; 15 timer/reset/payment safeguard tests pass and authenticated staff/customer mobile and desktop checks pass.
+- [x] Replace stale fast-download APK with 23 October kiosk-corrected APK; save/read back matching QR URL/checksum and verify downloaded bytes. Samsung remains Automatic; reset protection remains OFF.
 - [x] Separate optional status-bar failure from kiosk start, verify Android locked mode, retry entry, and report owner/enforcement failure — eight Kotlin lock/offline tests passed.
-- [ ] Verify full-phone lock on Samsung — blocked on new GitHub APK build/install and physical Home/Recents/payment/sleep tests; phone currently has Force unlock selected.
+- [ ] Verify full-phone lock on Samsung — corrected APK is hosted and QR matches; blocked on physical installation/version and Home/Recents/payment/sleep checks. Samsung currently has Automatic selected. Request lock-screen photo before any reset.
 - [x] Restore the visible staff home-screen install button and verify browser prompt, fallback, and installed state.
 - [x] Check Google sign-in admin access: shop Google account has no staff role; existing owner account remains admin.
 - [x] Verify downloaded APK checksum, save/read back setup settings, check authenticated admin and customer website flows, and request publication.
@@ -11,4 +11,5 @@
 - [x] Verify corrected Android build: user's run #20 shows unit tests and APK tasks succeeded; latest release downloaded and checksum saved on 18 October 2026.
 - [ ] Verify corrected APK installs on repaired Samsung — requires user-run QR enrollment on the physical phone.
 - [ ] Test reset recovery on one spare supported phone — blocked on a physical phone and verified shop Google account; keep all reset-lock switches OFF.
-- [ ] Re-enroll and re-test the repaired Samsung (QR enrollment, lock/unlock, offline lock, timer, sleep, uninterrupted payment) — phone returned; requires corrected APK build/checksum and user-run physical tests. Reset lock stays OFF until a separate spare phone passes recovery testing.
+- [ ] Re-test repaired Samsung (QR enrollment, lock/unlock, offline lock, timer, sleep, uninterrupted payment) — current installation and hardware enforcement require user confirmation. Reset lock stays OFF until a separate spare phone passes recovery testing.
+- [ ] Publish corrected customer timer and truthful staff lock labels — waits for explicit publication request.
