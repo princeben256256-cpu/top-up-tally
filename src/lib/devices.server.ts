@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { addDays, daysForAmount, isLocked, balanceOf } from "./lock";
+import { addDays, daysForAmount, isLocked, balanceOf, lockDeadline } from "./lock";
 
 type AnyClient = { from: (t: string) => any };
 
@@ -240,7 +240,7 @@ export async function deviceHeartbeat(imei: string, secret: string) {
     frp_account_id: (data as any).frp_enabled ? ((settings as any)?.frp_account_id ?? "") : "",
     fully_paid: Number(data.total_price) > 0 && balance <= 0,
     // Phone clock locks at this moment even with no internet (null = never auto-lock).
-    lock_at: data.lock_override === "auto" && balance > 0 ? data.paid_until : null,
+    lock_at: lockDeadline(data as any),
     device_id: data.id,
     customer_name: data.customer_name,
     locked,

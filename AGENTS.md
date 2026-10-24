@@ -19,3 +19,4 @@
 - Offline enforcement uses the cached server lock and deadline; a cleared deadline never acquires a grace-period lock. Why: fully paid and force-unlocked phones must remain usable offline.
 - Staff installation is handled by one root-mounted control on staff pages, using the browser install prompt with manual home-screen fallback; standalone windows hide it to avoid duplicate installation prompts.
 - Android kiosk entry verifies LOCK_TASK_MODE_LOCKED, retries on return, and treats status-bar restrictions independently; report owner/enforcement failures rather than claiming a visible app equals a device lock.
+- Customer countdown and heartbeat use the shared lock deadline rules; staff/customer lock labels describe requested instructions, never unreported physical enforcement. Why: overrides must not show stale timers and check-ins cannot prove kiosk containment.

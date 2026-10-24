@@ -7,7 +7,7 @@ import { AppShell } from "../components/AppShell";
 import { Button } from "../components/ui/button";
 import { lookupDevice } from "../lib/devices.functions";
 import { startMobileMoneyPayment, checkMobileMoneyPayment } from "../lib/payments.functions";
-import { formatDate, formatMoney } from "../lib/lock";
+import { formatDate, formatMoney, lockSchedule, type DeviceLockInput } from "../lib/lock";
 
 export const Route = createFileRoute("/pay")({
   head: () => ({
@@ -189,18 +189,19 @@ function CustomerConsole() {
           <span className="text-xs text-muted-foreground">
             {lastChecked ? `Updated ${lastChecked.toLocaleTimeString()}` : "My phone"}
           </span>
-          <button
+          <Button
             type="button"
             onClick={async () => {
               setRefreshing(true);
               await refresh(device.id);
               setRefreshing(false);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3 py-2 text-xs font-semibold text-white"
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Checking…" : "Refresh"}
-          </button>
+          </Button>
         </div>
       ) : (<>
       <section className="px-5 pt-6 pb-2">
@@ -333,20 +334,18 @@ function CustomerConsole() {
           </section>
 
           <section className="mx-5 mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-            <div className={`px-5 py-4 ${device.locked ? "bg-destructive" : "bg-navy"}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-white">
+            <div className={`px-5 py-4 ${device.locked ? "bg-destructive text-destructive-foreground" : "bg-primary text-primary-foreground"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
                   {device.locked ? <Lock className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
                   <span className="font-display text-sm font-semibold">
-                    {device.locked ? "Device locked" : "Device unlocked"}
+                    {device.locked ? "Lock requested" : "Access allowed"}
                   </span>
                 </div>
-                {!device.locked && (
-                  <LockCountdown paidUntil={device.paid_until} paidOff={device.balance <= 0} />
-                )}
+                <LockCountdown device={device} />
               </div>
-              <h2 className="mt-2 font-display text-lg font-semibold text-white">{device.customer_name}</h2>
-              <p className="text-xs text-white/70">
+              <h2 className="mt-2 font-display text-lg font-semibold">{device.customer_name}</h2>
+              <p className="text-xs opacity-70">
                 {device.device_model || "Device"} · IMEI {device.imei}
               </p>
             </div>
@@ -414,22 +413,23 @@ function Notice({ title, body }: { title: string; body: string }) {
   );
 }
 
-function LockCountdown({ paidUntil, paidOff }: { paidUntil: string; paidOff: boolean }) {
+function LockCountdown({ device }: { device: DeviceLockInput }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 30_000);
+    const t = setInterval(() => setNow(Date.now()), 1_000);
     return () => clearInterval(t);
   }, []);
-  let text = "Fully paid";
-  if (!paidOff) {
-    const mins = Math.max(0, Math.floor((new Date(paidUntil).getTime() - now) / 60_000));
+  const schedule = lockSchedule(device, new Date(now));
+  let text = { locked: "Staff lock", unlocked: "Staff unlock · timer paused", paid: "Fully paid", due: "Payment time ended", unknown: "Checking deadline", countdown: "" }[schedule.kind];
+  if (schedule.kind === "countdown") {
+    const mins = schedule.minutes;
     const d = Math.floor(mins / 1440);
     const h = Math.floor((mins % 1440) / 60);
     const m = mins % 60;
     text = `Locks in ${d > 0 ? `${d}d ` : ""}${h}h ${m}m`;
   }
   return (
-    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
+    <span className="rounded-md border border-current/30 px-2.5 py-0.5 text-[11px] font-medium">
       {text}
     </span>
   );
