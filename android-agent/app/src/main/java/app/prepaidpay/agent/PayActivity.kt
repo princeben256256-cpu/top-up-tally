@@ -42,6 +42,13 @@ class PayActivity : AppCompatActivity() {
         open = true
     }
 
+    // Left the pay page (Home, screen off): it no longer blocks the lock.
+    // A PIN prompt only pauses the page, so it stays protected.
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) open = false
+    }
+
     override fun onDestroy() {
         // Only a real close brings the lock back (not a screen rotation).
         val closing = isFinishing && !isChangingConfigurations

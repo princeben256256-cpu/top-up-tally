@@ -10,6 +10,9 @@ class BootReceiver : BroadcastReceiver() {
         DeviceOwner.applyBaselinePolicies(context)
         HeartbeatWorker.schedule(context)
         KeepAliveService.start(context)
-        if (Prefs.shouldLock(context)) HeartbeatWorker.showLock(context)
+        if (Prefs.shouldLock(context)) {
+            HeartbeatWorker.showLock(context)
+            LockAlarm.retrySoon(context)
+        }
     }
 }
