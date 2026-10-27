@@ -33,7 +33,7 @@ object LockAlarm {
             }
         }
     }
-}
+
 
     /** Due but lock not on screen yet (screen off, background killed): try again in 1 minute. */
     fun retrySoon(c: Context) {
