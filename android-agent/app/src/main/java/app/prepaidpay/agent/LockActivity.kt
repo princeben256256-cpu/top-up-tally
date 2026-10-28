@@ -49,6 +49,23 @@ class LockActivity : AppCompatActivity() {
             runCatching { startActivity(Intent(this, PayActivity::class.java)) }
                 .onFailure { PayActivity.open = false }
         }
+        findViewById<Button>(R.id.wifi).setOnClickListener {
+            // Device Owner may switch Wi-Fi on directly; then show the network list.
+            runCatching {
+                @Suppress("DEPRECATION")
+                (applicationContext.getSystemService(WIFI_SERVICE) as android.net.wifi.WifiManager).isWifiEnabled = true
+            }
+            openNetworkPanel(
+                if (android.os.Build.VERSION.SDK_INT >= 29) android.provider.Settings.Panel.ACTION_WIFI
+                else android.provider.Settings.ACTION_WIFI_SETTINGS
+            )
+        }
+        findViewById<Button>(R.id.data).setOnClickListener {
+            openNetworkPanel(
+                if (android.os.Build.VERSION.SDK_INT >= 29) android.provider.Settings.Panel.ACTION_INTERNET_CONNECTIVITY
+                else android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS
+            )
+        }
         findViewById<Button>(R.id.emergency).setOnClickListener {
             outsideAllowed = true
             runCatching { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:"))) }
@@ -65,6 +82,24 @@ class LockActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** Opens a network panel above the lock; the lock comes back after 2 minutes. */
+    private fun openNetworkPanel(action: String) {
+        outsideAllowed = true
+        val ok = runCatching { startActivity(Intent(action)) }.isSuccess ||
+            runCatching { startActivity(Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)) }.isSuccess
+        if (!ok) { outsideAllowed = false; return }
+        val app = applicationContext
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            if (outsideAllowed && !visible && Prefs.shouldLock(app)) {
+                outsideAllowed = false
+                runCatching {
+                    app.startActivity(Intent(app, LockActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+                }
+            }
+        }, 120_000)
     }
 
     override fun onStart() {
