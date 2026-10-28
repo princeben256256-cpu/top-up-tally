@@ -56,6 +56,27 @@
         android:layout_marginTop="8dp"
         android:text="I have paid — check now" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/wifi"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="Turn on Wi-Fi" />
+        <Button
+            android:id="@+id/data"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="Turn on data" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/emergency"
         style="?android:attr/borderlessButtonStyle"

@@ -60,6 +60,9 @@ object DeviceOwner {
                     context.packageName,
                     "com.android.phone", "com.android.stk", "com.android.server.telecom",
                     "com.samsung.android.app.telephonyui", "com.android.dialer",
+                    // Settings is allowed only so the locked screen can open the
+                    // Wi-Fi / mobile-data panels; the lock returns after 2 minutes.
+                    "com.android.settings",
                 ))
             }
         }
