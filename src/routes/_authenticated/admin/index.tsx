@@ -258,7 +258,9 @@ function AdminHome() {
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">
-                      {d.customer_name || <span className="text-brand">In stock · {d.device_model || "phone"}</span>}
+                      {d.customer_name || (
+                        <span className="text-brand">In stock · {d.device_model || "phone"} — tap to sell</span>
+                      )}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {d.phone_number ? `${d.phone_number} · ` : ""}IMEI {d.imei}
