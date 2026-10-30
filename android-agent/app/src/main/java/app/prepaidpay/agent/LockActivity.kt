@@ -66,6 +66,22 @@ class LockActivity : AppCompatActivity() {
                 else android.provider.Settings.ACTION_DATA_ROAMING_SETTINGS
             )
         }
+        findViewById<Button>(R.id.tempUnlock).apply {
+            text = "Emergency unlock 2 min (${Prefs.emergencyLeft(this@LockActivity)} left today)"
+            setOnClickListener {
+                if (!Prefs.useEmergency(this@LockActivity)) {
+                    android.widget.Toast.makeText(this@LockActivity, "No emergency unlocks left today", android.widget.Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+                val app = applicationContext
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    if (Prefs.shouldLock(app)) HeartbeatWorker.showLock(app)
+                }, Prefs.EMERGENCY_MS + 1_000)
+                android.widget.Toast.makeText(this@LockActivity, "Unlocked for 2 minutes", android.widget.Toast.LENGTH_LONG).show()
+                DeviceOwner.exitKiosk(this@LockActivity)
+                finish()
+            }
+        }
         findViewById<Button>(R.id.emergency).setOnClickListener {
             outsideAllowed = true
             runCatching { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:"))) }
