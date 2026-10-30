@@ -32,25 +32,28 @@ object DeviceOwner {
                 android.app.admin.DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED,
             )
         }
+        // Each restriction is applied on its own so one failure (some Samsung/Tecno
+        // builds reject single items) never skips the Settings-reset block.
+        listOf(
+            UserManager.DISALLOW_FACTORY_RESET,
+            UserManager.DISALLOW_ADD_USER,
+            UserManager.DISALLOW_SAFE_BOOT,
+            UserManager.DISALLOW_DEBUGGING_FEATURES,
+            UserManager.DISALLOW_UNINSTALL_APPS,
+            UserManager.DISALLOW_CONFIG_TETHERING,
+            UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA,
+            UserManager.DISALLOW_CONFIG_DATE_TIME,
+            UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES,
+            UserManager.DISALLOW_NETWORK_RESET,
+        ).forEach { r ->
+            runCatching { dpm.addUserRestriction(admin, r) }
+                .onFailure { android.util.Log.w("MULIKA", "restriction $r failed", it) }
+        }
+        runCatching { dpm.setUninstallBlocked(admin, context.packageName, true) }
+        runCatching { dpm.setStatusBarDisabled(admin, false) }
+        runCatching { dpm.setAutoTimeRequired(admin, true) }
         runCatching {
-            // The customer must not be able to remove or reset their way out.
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_FACTORY_RESET)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_ADD_USER)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_SAFE_BOOT)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_DEBUGGING_FEATURES)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_UNINSTALL_APPS)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_CONFIG_TETHERING)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA)
-            dpm.setUninstallBlocked(admin, context.packageName, true)
-            dpm.setStatusBarDisabled(admin, false)
 
-            // Extra anti-bypass: no clock cheating, no sideloaded "unlock" tools,
-            // no network reset. USB file transfer and airplane mode are left open
-            // so the customer keeps the full phone experience.
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_CONFIG_DATE_TIME)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES)
-            dpm.addUserRestriction(admin, UserManager.DISALLOW_NETWORK_RESET)
-            dpm.setAutoTimeRequired(admin, true)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
