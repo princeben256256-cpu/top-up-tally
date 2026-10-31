@@ -71,6 +71,13 @@
       "when": 1792301728883,
       "tag": "0009_atomic_iotec_credit",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793408659735,
+      "tag": "0010_device_reset_policy_reports",
+      "breakpoints": true
     }
   ]
 }
