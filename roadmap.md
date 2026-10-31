@@ -1,5 +1,6 @@
 - [x] Add device-reported Gmail policy acceptance/refusal, ownership and Settings-reset restriction readback; revision/freshness safeguards, 17 web tests and 5 Kotlin preflight tests pass. Authenticated staff page displays NOT VERIFIED correctly on desktop/mobile; unauthenticated report write returns 401. Actual Android readback/upload awaits new APK installation.
-- [ ] Verify new Gmail reporting APK and real button-reset recovery — requires user's GitHub build, physical installation and recovery test; prior Samsung reset accepted a different Gmail.
+- [x] Verify GitHub Gmail reporting build #35 succeeded, source and APK reporting code match, release checksum matches, fast CDN download serves identical bytes, and setup URL/checksum are saved.
+- [ ] Verify Gmail report on the physical phone and real button-reset recovery — requires new APK installation and controlled recovery test; prior Samsung reset accepted a different Gmail, so protection remains unproven.
 - [x] Stop the shop-Gmail reset lock from using an email (it bricked the Samsung after reset)
 - [x] Correct customer countdown for automatic, forced unlock, fully paid and expired states; 15 timer/reset/payment safeguard tests pass and authenticated staff/customer mobile and desktop checks pass.
 - [x] Replace stale fast-download APK with 23 October kiosk-corrected APK; save/read back matching QR URL/checksum and verify downloaded bytes. Samsung remains Automatic; reset protection remains OFF.
