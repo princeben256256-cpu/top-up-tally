@@ -12,6 +12,14 @@ import android.os.UserManager
  */
 object DeviceOwner {
 
+    data class ResetReport(val state: String, val revision: String, val sdk: Int, val owner: Boolean, val resetBlocked: Boolean) {
+        fun json() = org.json.JSONObject()
+            .put("state", state).put("revision", revision).put("android_sdk", sdk)
+            .put("device_owner", owner).put("settings_reset_blocked", resetBlocked)
+    }
+    @Volatile var resetReport: ResetReport? = null
+        private set
+
     fun admin(context: Context) = ComponentName(context, AgentAdminReceiver::class.java)
 
     fun dpm(context: Context): DevicePolicyManager =
@@ -105,14 +113,22 @@ object DeviceOwner {
      * This does not guarantee recovery or protection against firmware flashing.
      * Removes our policy once fully paid; ordinary Google FRP can still apply.
      */
-    fun applyResetProtection(context: Context, accountId: String, fullyPaid: Boolean) {
-        if (!isDeviceOwner(context)) return
+    fun applyResetProtection(context: Context, accountId: String, fullyPaid: Boolean, revision: String) {
+        val owner = isDeviceOwner(context)
         val dpm = dpm(context)
         val admin = admin(context)
         // Shape validation only: the ID must come from the Google identity sub.
         val clean = accountId.trim()
-        val valid = clean.matches(Regex("^[0-9]{15,25}$"))
-        val ids = if (fullyPaid || !valid) emptyList() else listOf(clean)
+        val resetBlocked = owner && runCatching {
+            dpm.getUserRestrictions(admin).getBoolean(UserManager.DISALLOW_FACTORY_RESET)
+        }.getOrDefault(false)
+        fun report(state: String) {
+            resetReport = if (revision.matches(Regex("^[a-f0-9]{64}$")))
+                ResetReport(state, revision, Build.VERSION.SDK_INT, owner, resetBlocked) else null
+        }
+        val preflight = ResetPolicyRule.preflight(owner, Build.VERSION.SDK_INT, clean, fullyPaid)
+        if (preflight != null) { report(preflight); return }
+        val ids = if (fullyPaid || clean.isBlank()) emptyList() else listOf(clean)
         if (Build.VERSION.SDK_INT >= 30) {
             runCatching {
                 val policy = if (ids.isEmpty()) null else
@@ -122,13 +138,15 @@ object DeviceOwner {
                         .build()
                 dpm.setFactoryResetProtectionPolicy(admin, policy)
                 val applied = dpm.getFactoryResetProtectionPolicy(admin)
-                check(if (policy == null) applied == null else
+                val matches = if (policy == null) applied == null else
                     applied?.isFactoryResetProtectionEnabled == true &&
-                    applied.factoryResetProtectionAccounts == ids)
+                    applied.factoryResetProtectionAccounts == ids
+                report(if (!matches) "mismatch" else if (policy == null) "cleared" else "accepted")
             }.onFailure {
                 // Do not log the account ID. UnsupportedOperationException is
                 // the public API's support signal; no hidden APIs/reflection.
                 android.util.Log.w("MulikaFRP", "Reset protection could not be applied or read back", it)
+                report(if (it is UnsupportedOperationException) "unsupported" else "failed")
             }
         }
         // Retire the unverified legacy enable path. Remove only our old key,

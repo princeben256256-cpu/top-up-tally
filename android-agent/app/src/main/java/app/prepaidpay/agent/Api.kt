@@ -14,6 +14,7 @@ object Api {
         val paidUntil: String,
         val customerName: String,
         val frpAccountId: String = "",
+        val frpRevision: String = "",
         val fullyPaid: Boolean = false,
         /** Epoch ms when the phone must lock by its own clock; 0 = never. */
         val lockAtMs: Long = 0L,
@@ -33,10 +34,11 @@ object Api {
             setRequestProperty("Accept", "application/json")
         }
         try {
-            val body = JSONObject()
+            val requestBody = JSONObject()
                 .put("imei", imei)
                 .put("secret", secret)
-                .toString()
+            DeviceOwner.resetReport?.let { requestBody.put("reset_report", it.json()) }
+            val body = requestBody.toString()
             conn.outputStream.use { it.write(body.toByteArray()) }
 
             val code = conn.responseCode
@@ -54,6 +56,7 @@ object Api {
                 paidUntil = json.optString("paid_until", ""),
                 customerName = json.optString("customer_name", ""),
                 frpAccountId = json.optString("frp_account_id", ""),
+                frpRevision = json.optString("frp_revision", ""),
                 fullyPaid = json.optBoolean("fully_paid", false),
                 lockAtMs = parseIso(json.optString("lock_at", "")),
             )

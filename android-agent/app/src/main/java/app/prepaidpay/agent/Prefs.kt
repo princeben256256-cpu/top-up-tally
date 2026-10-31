@@ -46,8 +46,8 @@ object Prefs {
             .commit()
         // Arm the offline lock alarm for the new deadline.
         LockAlarm.schedule(c)
-        // Shop Gmail must unlock the phone after any reset until fully paid.
-        DeviceOwner.applyResetProtection(c, s.frpAccountId, s.fullyPaid)
+        // Readback describes Android configuration, not proven post-reset recovery.
+        DeviceOwner.applyResetProtection(c, s.frpAccountId, s.fullyPaid, s.frpRevision)
     }
 
     fun locked(c: Context) = sp(c).getBoolean(K_LOCKED, false)
