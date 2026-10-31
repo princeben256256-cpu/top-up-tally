@@ -11,6 +11,15 @@ import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked, lockSchedule } from "@/lib/lock";
 import { Switch } from "@/components/ui/switch";
 
+const resetReportLabels: Record<string, string> = {
+  accepted: "ACCEPTED — Android policy readback matched",
+  cleared: "OFF — MULIKA policy removal confirmed",
+  unsupported: "UNSUPPORTED — Android cannot apply this policy",
+  not_owner: "REFUSED — MULIKA is not device owner",
+  invalid_account: "REFUSED — invalid shop Google number",
+  failed: "REFUSED — Android policy request failed",
+  mismatch: "REFUSED — Android readback did not match",
+};
 
 export const Route = createFileRoute("/_authenticated/admin/$id")({
   head: () => ({
@@ -209,6 +218,20 @@ function DeviceDetail() {
         )}
 
         {isAdmin && <ResetLockSwitch id={id} on={!!(d as any).frp_enabled} />}
+        <section aria-label="Phone reset protection report" className="mt-4 border-y border-border py-4">
+          <h2 className="font-display text-sm font-semibold">Gmail protection — phone report</h2>
+          {data.reset_report ? (
+            <div className="mt-2 space-y-2 text-sm">
+              <p className={data.reset_report.current && ["accepted", "cleared"].includes(data.reset_report.state) ? "font-semibold text-foreground" : "font-semibold text-destructive"}>
+                {!data.reset_report.current ? "OLD REPORT — waiting for a fresh phone check" : (resetReportLabels[data.reset_report.state] ?? "UNKNOWN — protection not confirmed")}
+              </p>
+              <p>Device owner: {data.reset_report.device_owner ? "Active" : "Not active"} · Android API {data.reset_report.android_sdk}</p>
+              <p>Reset in Settings: {data.reset_report.settings_reset_blocked ? "Blocked — phone reported" : "NOT BLOCKED — do not hand over this phone"}</p>
+              <p className="text-xs text-muted-foreground">Reported {new Date(data.reset_report.received_at).toLocaleString()}</p>
+            </div>
+          ) : <p className="mt-2 text-sm font-semibold text-destructive">NOT VERIFIED — no report from the new lock app yet</p>}
+          <p className="mt-3 text-xs text-muted-foreground">Acceptance confirms Android’s saved policy only. It does not prove that a button reset will demand the shop Gmail or that flashing cannot remove protection. A reset erases the lock app; MULIKA cannot recover an already-reset phone remotely.</p>
+        </section>
 
         <section className="mt-5 rounded-xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold">

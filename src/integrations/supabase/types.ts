@@ -124,6 +124,44 @@ export type Database = {
           },
         ]
       }
+      device_reset_reports: {
+        Row: {
+          android_sdk: number
+          device_id: string
+          device_owner: boolean
+          received_at: string
+          revision: string
+          settings_reset_blocked: boolean
+          state: string
+        }
+        Insert: {
+          android_sdk: number
+          device_id: string
+          device_owner: boolean
+          received_at?: string
+          revision: string
+          settings_reset_blocked: boolean
+          state: string
+        }
+        Update: {
+          android_sdk?: number
+          device_id?: string
+          device_owner?: boolean
+          received_at?: string
+          revision?: string
+          settings_reset_blocked?: boolean
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_reset_reports_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           amount_paid: number

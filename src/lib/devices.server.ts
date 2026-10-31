@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { addDays, daysForAmount, isLocked, balanceOf, lockDeadline } from "./lock";
+import { isCurrentResetReport, resetRevision, type ResetReport } from "./reset-report";
 
 type AnyClient = { from: (t: string) => any };
 
@@ -31,7 +32,16 @@ export async function getDeviceFor(client: AnyClient, id: string) {
     .order("created_at", { ascending: false });
   if (pErr) throw new Error(pErr.message);
 
-  return { device: data, payments: payments ?? [] };
+  const { data: report, error: reportError } = await client.from("device_reset_reports")
+    .select("state, revision, android_sdk, device_owner, settings_reset_blocked, received_at")
+    .eq("device_id", id).maybeSingle();
+  if (reportError) throw new Error(reportError.message);
+  const { data: settings, error: settingsError } = await client.from("app_settings")
+    .select("frp_account_id").eq("id", 1).maybeSingle();
+  if (settingsError) throw new Error(settingsError.message);
+  const fullyPaid = Number(data.total_price) > 0 && balanceOf(data) <= 0;
+  const revision = await resetRevision(!!data.frp_enabled, settings?.frp_account_id ?? "", fullyPaid);
+  return { device: data, payments: payments ?? [], reset_report: report ? { ...report, current: isCurrentResetReport(report, revision) } : null };
 }
 
 export async function createDeviceFor(
@@ -193,7 +203,7 @@ export async function lookupDevicePublic(query: string) {
 }
 
 /** Device-agent heartbeat: authenticates with IMEI + enrollment secret. */
-export async function deviceHeartbeat(imei: string, secret: string) {
+export async function deviceHeartbeat(imei: string, secret: string, report?: ResetReport) {
   const cols =
     "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at, frp_enabled";
   // Phones enrolled before an IMEI correction still send the old number
@@ -223,22 +233,35 @@ export async function deviceHeartbeat(imei: string, secret: string) {
     if (fresh) data = fresh as typeof data;
   }
 
-  await supabaseAdmin
+  const { error: seenError } = await supabaseAdmin
     .from("devices")
     .update({
       last_seen_at: new Date().toISOString(),
       enrolled_at: data.enrolled_at ?? new Date().toISOString(),
     })
     .eq("id", data.id);
+  if (seenError) throw new Error(seenError.message);
 
   const locked = isLocked(data as any);
   const { data: settings } = await supabaseAdmin
     .from("app_settings").select("frp_account_id").eq("id", 1).maybeSingle();
   const balance = balanceOf(data as any);
+  const enabled = !!data.frp_enabled;
+  const account = settings?.frp_account_id ?? "";
+  const fullyPaid = Number(data.total_price) > 0 && balance <= 0;
+  const revision = await resetRevision(enabled, account, fullyPaid);
+  // The enrollment secret above authenticates this device. Ignore outdated readback.
+  if (report && report.revision === revision) {
+    const { error: reportError } = await supabaseAdmin.from("device_reset_reports").upsert({
+      device_id: data.id, ...report, received_at: new Date().toISOString(),
+    });
+    if (reportError) throw new Error(reportError.message);
+  }
   return {
     // Only phones switched on by an admin get the reset lock.
-    frp_account_id: (data as any).frp_enabled ? ((settings as any)?.frp_account_id ?? "") : "",
-    fully_paid: Number(data.total_price) > 0 && balance <= 0,
+    frp_account_id: enabled ? account : "",
+    frp_revision: revision,
+    fully_paid: fullyPaid,
     // Phone clock locks at this moment even with no internet (null = never auto-lock).
     lock_at: lockDeadline(data as any),
     device_id: data.id,
