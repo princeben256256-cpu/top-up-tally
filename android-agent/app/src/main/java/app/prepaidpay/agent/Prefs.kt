@@ -45,14 +45,16 @@ object Prefs {
             .putLong(K_LOCK_AT, s.lockAtMs)
             .commit()
         // Arm the offline lock alarm for the new deadline.
+        SimProtection.savePolicy(c, s.simEnabled && !s.fullyPaid, s.simExpectedHash, s.simRevision)
         LockAlarm.schedule(c)
         // Readback describes Android configuration, not proven post-reset recovery.
         DeviceOwner.applyResetProtection(c, s.frpAccountId, s.fullyPaid, s.frpRevision)
     }
 
     fun locked(c: Context) = sp(c).getBoolean(K_LOCKED, false)
-    fun message(c: Context): String =
-        sp(c).getString(K_MESSAGE, null) ?: "Please make a payment to continue using this device."
+    fun message(c: Context): String = if (SimProtection.shouldLock(c))
+        "Registered SIM not detected. Reinsert the registered SIM or contact MULIKA staff for an approved replacement."
+        else sp(c).getString(K_MESSAGE, null) ?: "Please make a payment to continue using this device."
     fun balance(c: Context): String = sp(c).getString(K_BALANCE, null) ?: "—"
     fun paidUntil(c: Context): String = sp(c).getString(K_PAID_UNTIL, null) ?: "—"
     fun lastOk(c: Context) = sp(c).getLong(K_LAST_OK, 0L)
@@ -80,7 +82,8 @@ object Prefs {
     /** Server is the authority; offline the phone clock locks it when paid time ends. */
     fun shouldLock(c: Context): Boolean {
         if (safeNow(c) < sp(c).getLong(K_EMERG_UNTIL, 0L)) return false
-        return OfflineLockRule.shouldLock(isEnrolled(c), locked(c), lockAt(c), safeNow(c))
+        if (!isEnrolled(c)) return false
+        return SimProtection.shouldLock(c) || OfflineLockRule.shouldLock(true, locked(c), lockAt(c), safeNow(c))
     }
 
     fun countdownText(c: Context): String {

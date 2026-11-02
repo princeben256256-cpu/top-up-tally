@@ -18,6 +18,9 @@ object Api {
         val fullyPaid: Boolean = false,
         /** Epoch ms when the phone must lock by its own clock; 0 = never. */
         val lockAtMs: Long = 0L,
+        val simEnabled: Boolean = false,
+        val simExpectedHash: String = "",
+        val simRevision: String = "",
     )
 
     private const val HEARTBEAT_PATH = "/api/public/device/heartbeat"
@@ -38,6 +41,7 @@ object Api {
                 .put("imei", imei)
                 .put("secret", secret)
             DeviceOwner.resetReport(context)?.let { requestBody.put("reset_report", it.json()) }
+            requestBody.put("sim_report", SimProtection.report(context))
             val body = requestBody.toString()
             conn.outputStream.use { it.write(body.toByteArray()) }
 
@@ -59,6 +63,9 @@ object Api {
                 frpRevision = json.optString("frp_revision", ""),
                 fullyPaid = json.optBoolean("fully_paid", false),
                 lockAtMs = parseIso(json.optString("lock_at", "")),
+                simEnabled = json.optBoolean("sim_enabled", false),
+                simExpectedHash = json.optString("sim_expected_hash", ""),
+                simRevision = json.optString("sim_revision", ""),
             )
         } finally {
             conn.disconnect()

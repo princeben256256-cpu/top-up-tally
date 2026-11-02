@@ -57,6 +57,12 @@ object DeviceOwner {
         val dpm = dpm(context)
         val admin = admin(context)
 
+        // Device Owner is required to read the physical SIM identifier on modern Android.
+        runCatching {
+            check(dpm.setPermissionGrantState(admin, context.packageName,
+                android.Manifest.permission.READ_PHONE_STATE, DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED))
+        }.onFailure { android.util.Log.w("MULIKA", "SIM permission grant unavailable", it) }
+
         // Let our own countdown notification show (Android 13+ hides it otherwise).
         if (android.os.Build.VERSION.SDK_INT >= 33) runCatching {
             dpm.setPermissionGrantState(

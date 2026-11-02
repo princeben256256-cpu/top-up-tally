@@ -54,6 +54,9 @@ class KeepAliveService : Service() {
         val filter = android.content.IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_USER_PRESENT)
+            addAction("android.telephony.action.SIM_CARD_STATE_CHANGED")
+            addAction("android.telephony.action.SIM_APPLICATION_STATE_CHANGED")
+            addAction("android.intent.action.SIM_STATE_CHANGED")
         }
         if (Build.VERSION.SDK_INT >= 33) {
             registerReceiver(r, filter, Context.RECEIVER_NOT_EXPORTED)
