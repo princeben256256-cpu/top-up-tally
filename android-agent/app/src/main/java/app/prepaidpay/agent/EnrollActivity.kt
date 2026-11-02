@@ -56,7 +56,7 @@ class EnrollActivity : AppCompatActivity() {
             button.isEnabled = false
             lifecycleScope.launch {
                 val result = withContext(Dispatchers.IO) {
-                    runCatching { Api.heartbeat(imei, secret) }
+                    runCatching { Api.heartbeat(this@EnrollActivity, imei, secret) }
                 }
                 button.isEnabled = true
                 val status = result.getOrNull()

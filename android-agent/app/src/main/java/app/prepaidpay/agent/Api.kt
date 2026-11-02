@@ -23,7 +23,7 @@ object Api {
     private const val HEARTBEAT_PATH = "/api/public/device/heartbeat"
 
     /** Returns null on auth failure, throws on network/server error. */
-    fun heartbeat(imei: String, secret: String): Status? {
+    fun heartbeat(context: android.content.Context, imei: String, secret: String): Status? {
         val url = URL(BuildConfig.API_BASE + HEARTBEAT_PATH)
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
@@ -37,7 +37,7 @@ object Api {
             val requestBody = JSONObject()
                 .put("imei", imei)
                 .put("secret", secret)
-            DeviceOwner.resetReport?.let { requestBody.put("reset_report", it.json()) }
+            DeviceOwner.resetReport(context)?.let { requestBody.put("reset_report", it.json()) }
             val body = requestBody.toString()
             conn.outputStream.use { it.write(body.toByteArray()) }
 

@@ -67,7 +67,7 @@ class KeepAliveService : Service() {
         val imei = Prefs.imei(this)
         val secret = Prefs.secret(this)
         if (imei.isNullOrBlank() || secret.isNullOrBlank()) return
-        val status = runCatching { Api.heartbeat(imei, secret) }.getOrNull()
+        val status = runCatching { Api.heartbeat(this, imei, secret) }.getOrNull()
         if (status != null) Prefs.saveStatus(this, status)
         updateNotification()
         if (Prefs.shouldLock(this)) {

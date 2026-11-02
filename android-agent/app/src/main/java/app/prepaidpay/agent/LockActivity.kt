@@ -137,7 +137,7 @@ class LockActivity : AppCompatActivity() {
         val secret = Prefs.secret(this) ?: return
         lifecycleScope.launch {
             val status = withContext(Dispatchers.IO) {
-                runCatching { Api.heartbeat(imei, secret) }.getOrNull()
+                runCatching { Api.heartbeat(this@LockActivity, imei, secret) }.getOrNull()
             }
             if (status != null) Prefs.saveStatus(this@LockActivity, status)
             if (!Prefs.shouldLock(this@LockActivity)) {
