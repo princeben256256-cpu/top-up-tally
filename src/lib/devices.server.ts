@@ -33,7 +33,7 @@ export async function getDeviceFor(client: AnyClient, id: string) {
   if (pErr) throw new Error(pErr.message);
 
   const { data: report, error: reportError } = await client.from("device_reset_reports")
-    .select("state, revision, android_sdk, device_owner, settings_reset_blocked, received_at")
+    .select("state, revision, android_sdk, device_owner, settings_reset_blocked, received_at, app_version, frp_supported, dev_options_on")
     .eq("device_id", id).maybeSingle();
   if (reportError) throw new Error(reportError.message);
   const { data: settings, error: settingsError } = await client.from("app_settings")
