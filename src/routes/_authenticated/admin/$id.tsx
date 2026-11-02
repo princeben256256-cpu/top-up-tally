@@ -167,7 +167,7 @@ function DeviceDetail() {
             <p className="mt-1 text-xs text-muted-foreground">Photos, National ID scans, guarantor and signature</p>
           </Link>
         )}
-        {d.customer_name && <KycPanel id={id} />}
+        {d.customer_name && <KycPanel id={id} customerName={d.customer_name} />}
 
         <div className="grid gap-2 grid-cols-3">
           <Stat label="Balance" value={formatMoney(balanceOf(d))} />
@@ -439,10 +439,21 @@ function SetupQr({ device }: { device: any }) {
   );
 }
 
-function KycPanel({ id }: { id: string }) {
+function KycPanel({ id, customerName }: { id: string; customerName: string }) {
   const fn = useServerFn(getCustomerKyc);
-  const { data: k } = useQuery({ queryKey: ["kyc", id], queryFn: () => fn({ data: { device_id: id } }) });
-  if (!k) return null;
+  const { data: k, isFetched } = useQuery({ queryKey: ["kyc", id], queryFn: () => fn({ data: { device_id: id } }) });
+  if (!k) {
+    if (!isFetched) return null;
+    return (
+      <section className="mb-4 rounded-xl border-2 border-warning/40 bg-card p-4 text-sm">
+        <h2 className="font-display text-sm font-semibold">No customer form for this phone</h2>
+        <p className="mt-1 text-muted-foreground">
+          This phone was given to {customerName} before the full customer form existed, so there are no photos, ID scans, guarantor or signature.
+          The customer form only opens for phones in stock. To use it, go to All devices, tap <span className="font-semibold text-foreground">Register phone</span> to add a new phone, then tap <span className="font-semibold text-foreground">Register customer</span>.
+        </p>
+      </section>
+    );
+  }
   const u = (k as any).urls as Record<string, string | null>;
   const pics: [string, string][] = [
     ["customer_photo", "Customer"], ["id_front", "ID front"], ["id_back", "ID back"],
