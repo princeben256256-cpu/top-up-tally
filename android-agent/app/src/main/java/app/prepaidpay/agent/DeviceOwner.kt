@@ -146,10 +146,9 @@ object DeviceOwner {
         val resetBlocked = owner && runCatching {
             dpm.getUserRestrictions(admin).getBoolean(UserManager.DISALLOW_FACTORY_RESET)
         }.getOrDefault(false)
-        // Public Android 11+ support signal; null when it cannot be read.
-        val supported: Boolean? = if (Build.VERSION.SDK_INT >= 30) runCatching {
-            dpm.isFactoryResetProtectionPolicySupported()
-        }.getOrNull() else false
+        // No public support-query API exists. Infer support only from the public
+        // set/get policy operations below; null means it has not been established.
+        var supported: Boolean? = if (Build.VERSION.SDK_INT < 30) false else null
         val devOn = runCatching {
             android.provider.Settings.Global.getInt(context.contentResolver,
                 android.provider.Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1
@@ -171,6 +170,7 @@ object DeviceOwner {
                         .build()
                 dpm.setFactoryResetProtectionPolicy(admin, policy)
                 val applied = dpm.getFactoryResetProtectionPolicy(admin)
+                supported = true
                 val matches = if (policy == null) applied == null else
                     applied?.isFactoryResetProtectionEnabled == true &&
                     applied.factoryResetProtectionAccounts == ids
@@ -179,6 +179,7 @@ object DeviceOwner {
                 // Do not log the account ID. UnsupportedOperationException is
                 // the public API's support signal; no hidden APIs/reflection.
                 android.util.Log.w("MulikaFRP", "Reset protection could not be applied or read back", it)
+                if (it is UnsupportedOperationException) supported = false
                 report(if (it is UnsupportedOperationException) "unsupported" else "failed")
             }
         }
