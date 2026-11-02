@@ -193,9 +193,12 @@ export const setSimProtection = createServerFn({ method: "POST" })
     assertSimApproval(true, data.hash, policy);
     if (!policy || policy.revision !== data.revision) throw new Error("SIM settings changed. Refresh and try again");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: saved, error } = await supabaseAdmin.from("device_sim_policies").update({
+    let update = supabaseAdmin.from("device_sim_policies").update({
       enabled: data.hash !== null, expected_hash: data.hash, revision: crypto.randomUUID(), updated_at: new Date().toISOString(),
-    }).eq("device_id", data.device_id).eq("revision", data.revision).select("device_id").maybeSingle();
+    }).eq("device_id", data.device_id).eq("revision", data.revision);
+    // Reject approval if a newer heartbeat replaced the observed SIMs during this request.
+    if (data.hash !== null && policy.reported_at) update = update.eq("reported_at", policy.reported_at);
+    const { data: saved, error } = await update.select("device_id").maybeSingle();
     if (error) throw new Error("Could not save registered SIM protection");
     if (!saved) throw new Error("SIM settings changed. Refresh and try again");
     return { ok: true };

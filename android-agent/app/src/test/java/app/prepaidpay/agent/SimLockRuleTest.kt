@@ -20,4 +20,8 @@ class SimLockRuleTest {
     @Test fun confirmedAbsenceRemainsLocked() {
         assertTrue(SimLockRule.shouldLock(true, "approved", emptyList(), 120_000))
     }
+    @Test fun unknownRadioNeverInventsOrClearsAViolation() {
+        assertFalse(SimLockRule.shouldLock(true, "approved", emptyList(), 120_000, false, false))
+        assertTrue(SimLockRule.shouldLock(true, "approved", emptyList(), 0, false, true))
+    }
 }

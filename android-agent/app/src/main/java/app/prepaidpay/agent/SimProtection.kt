@@ -20,6 +20,11 @@ object SimProtection {
         if (!owner || c.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED)
             return Observation(emptyList(), false, owner)
         return runCatching {
+            if (android.provider.Settings.Global.getInt(c.contentResolver,
+                    android.provider.Settings.Global.AIRPLANE_MODE_ON, 0) == 1 ||
+                SystemClock.elapsedRealtime() < SimLockRule.SETTLE_MS) {
+                return@runCatching Observation(emptyList(), false, owner)
+            }
             val manager = c.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
             val infos = (manager.activeSubscriptionInfoList ?: emptyList()).filter {
                 android.os.Build.VERSION.SDK_INT < 28 || !it.isEmbedded
@@ -67,7 +72,11 @@ object SimProtection {
         val observation = observe(c)
         // Radio-off, SIM PIN and redacted reads are not proof of removal.
         // They must not clear an already-confirmed violation either.
-        if (!observation.readable) return sp.getBoolean("violation", false)
+        if (!observation.readable) {
+            sp.edit().remove("missing_since").apply()
+            return SimLockRule.shouldLock(true, expected, emptyList(), 0,
+                readable = false, previousViolation = sp.getBoolean("violation", false))
+        }
         val violation = SimLockRule.shouldLock(true, expected, observation.hashes,
             missingDuration(c, SimLockRule.matches(expected, observation.hashes)))
         sp.edit().putBoolean("violation", violation).apply()
