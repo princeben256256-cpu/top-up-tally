@@ -1,3 +1,5 @@
+- [ ] Add admin-approved SIM binding, authenticated phone reports, offline Android enforcement and rule tests.
+- [ ] Verify registered-SIM protection on hardware — requires a new GitHub APK and physical SIM removal/replacement tests.
 - [x] Correct an Android compile blocker in failed GitHub build #37: removed the non-public FRP support query; support now follows public set/readback results. Android 35 public API checks and 13 web safety tests pass. GitHub's exact compiler log is permission-restricted; full APK compilation awaits the next GitHub run.
 - [x] Diagnose 2 Nov Gmail-lock failure: no Gmail report was ever received from the Samsung (phone never ran the reporting app before reset). Lock app 1.4 now reports app version, Android Gmail-lock support and developer-options state; report survives app restarts.
 - [x] Build lock app 1.4 on GitHub (run 2 Nov succeeded), upload to fast CDN, save matching URL/checksum, verify live bytes. Next: re-enroll Samsung, confirm console shows version 6 + ACCEPTED + supported before any button reset.
