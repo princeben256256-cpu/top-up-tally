@@ -171,6 +171,50 @@ export type Database = {
           },
         ]
       }
+      device_sim_policies: {
+        Row: {
+          device_id: string
+          enabled: boolean
+          expected_hash: string | null
+          reported_at: string | null
+          reported_hashes: Json
+          reported_revision: string | null
+          reported_state: string | null
+          revision: string
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          enabled?: boolean
+          expected_hash?: string | null
+          reported_at?: string | null
+          reported_hashes?: Json
+          reported_revision?: string | null
+          reported_state?: string | null
+          revision?: string
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          enabled?: boolean
+          expected_hash?: string | null
+          reported_at?: string | null
+          reported_hashes?: Json
+          reported_revision?: string | null
+          reported_state?: string | null
+          revision?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_sim_policies_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: true
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           amount_paid: number
