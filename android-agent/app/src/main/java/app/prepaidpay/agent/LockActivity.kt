@@ -110,10 +110,7 @@ class LockActivity : AppCompatActivity() {
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             if (outsideAllowed && !visible && Prefs.shouldLock(app)) {
                 outsideAllowed = false
-                runCatching {
-                    app.startActivity(Intent(app, LockActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
-                }
+                HeartbeatWorker.showLock(app)
             }
         }, 120_000)
     }
@@ -149,7 +146,8 @@ class LockActivity : AppCompatActivity() {
                 render()
                 if (userAsked) android.widget.Toast.makeText(
                     this@LockActivity,
-                    if (status == null) "No internet — try again" else "Not paid yet. Tap Pay now.",
+                    if (SimProtection.shouldLock(this@LockActivity)) "Reinsert your registered SIM or contact MULIKA staff."
+                    else if (status == null) "No internet — try again" else "Not paid yet. Tap Pay now.",
                     android.widget.Toast.LENGTH_LONG,
                 ).show()
             }

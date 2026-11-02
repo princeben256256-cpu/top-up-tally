@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertResetLockAllowed } from "./reset-protection";
+import { assertSimApproval, simHashSchema } from "./sim-protection";
 
 const idSchema = z.object({ id: z.string().uuid() });
 
@@ -176,5 +177,26 @@ export const setResetLock = createServerFn({ method: "POST" })
     const { data: saved, error } = await context.supabase.from("devices").update({ frp_enabled: data.enabled }).eq("id", data.device_id).select("id").maybeSingle();
     if (error) throw new Error(error.message);
     if (!saved) throw new Error("Device not found or access denied");
+    return { ok: true };
+  });
+
+export const setSimProtection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ device_id: z.string().uuid(), hash: simHashSchema.nullable(), revision: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin, error: roleError } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
+    assertSimApproval(!roleError && isAdmin === true, null, null);
+    const { data: device, error: deviceError } = await context.supabase.from("devices").select("id").eq("id", data.device_id).maybeSingle();
+    if (deviceError || !device) throw new Error("Device not found or access denied");
+    const { data: policy, error: policyError } = await context.supabase.from("device_sim_policies").select("*").eq("device_id", data.device_id).maybeSingle();
+    if (policyError) throw new Error("Could not read SIM report");
+    assertSimApproval(true, data.hash, policy);
+    if (!policy || policy.revision !== data.revision) throw new Error("SIM settings changed. Refresh and try again");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: saved, error } = await supabaseAdmin.from("device_sim_policies").update({
+      enabled: data.hash !== null, expected_hash: data.hash, revision: crypto.randomUUID(), updated_at: new Date().toISOString(),
+    }).eq("device_id", data.device_id).eq("revision", data.revision).select("device_id").maybeSingle();
+    if (error) throw new Error("Could not save registered SIM protection");
+    if (!saved) throw new Error("SIM settings changed. Refresh and try again");
     return { ok: true };
   });

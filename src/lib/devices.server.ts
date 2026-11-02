@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { addDays, daysForAmount, isLocked, balanceOf, lockDeadline } from "./lock";
 import { isCurrentResetReport, resetRevision, type ResetReport } from "./reset-report";
+import { simReportCurrent, type SimReport } from "./sim-protection";
 
 type AnyClient = { from: (t: string) => any };
 
@@ -41,7 +42,10 @@ export async function getDeviceFor(client: AnyClient, id: string) {
   if (settingsError) throw new Error(settingsError.message);
   const fullyPaid = Number(data.total_price) > 0 && balanceOf(data) <= 0;
   const revision = await resetRevision(!!data.frp_enabled, settings?.frp_account_id ?? "", fullyPaid);
-  return { device: data, payments: payments ?? [], reset_report: report ? { ...report, current: isCurrentResetReport(report, revision) } : null };
+  const { data: simPolicy, error: simError } = await client.from("device_sim_policies").select("*").eq("device_id", id).maybeSingle();
+  if (simError) throw new Error(simError.message);
+  return { device: data, payments: payments ?? [], reset_report: report ? { ...report, current: isCurrentResetReport(report, revision) } : null,
+    sim_policy: simPolicy ? { ...simPolicy, current: simReportCurrent(simPolicy), released: fullyPaid || data.lock_override === "unlocked" } : null };
 }
 
 export async function createDeviceFor(
@@ -203,7 +207,7 @@ export async function lookupDevicePublic(query: string) {
 }
 
 /** Device-agent heartbeat: authenticates with IMEI + enrollment secret. */
-export async function deviceHeartbeat(imei: string, secret: string, report?: ResetReport) {
+export async function deviceHeartbeat(imei: string, secret: string, report?: ResetReport, simReport?: SimReport) {
   const cols =
     "id, imei, customer_name, total_price, amount_paid, paid_until, lock_override, lock_message, enrollment_secret, enrolled_at, frp_enabled";
   // Phones enrolled before an IMEI correction still send the old number
@@ -249,6 +253,20 @@ export async function deviceHeartbeat(imei: string, secret: string, report?: Res
   const enabled = !!data.frp_enabled;
   const account = settings?.frp_account_id ?? "";
   const fullyPaid = Number(data.total_price) > 0 && balance <= 0;
+  // Only authenticated phone observations can introduce candidates. Never auto-approve them.
+  if (simReport) {
+    const { error: initError } = await supabaseAdmin.from("device_sim_policies")
+      .upsert({ device_id: data.id }, { onConflict: "device_id", ignoreDuplicates: true });
+    if (initError) throw new Error(initError.message);
+    const { error: simError } = await supabaseAdmin.from("device_sim_policies").update({
+      reported_hashes: simReport.hashes, reported_state: simReport.state,
+      reported_revision: simReport.revision, reported_at: new Date().toISOString(),
+    }).eq("device_id", data.id);
+    if (simError) throw new Error(simError.message);
+  }
+  const { data: simPolicy, error: simReadError } = await supabaseAdmin.from("device_sim_policies")
+    .select("enabled, expected_hash, revision").eq("device_id", data.id).maybeSingle();
+  if (simReadError) throw new Error(simReadError.message);
   const revision = await resetRevision(enabled, account, fullyPaid);
   // The enrollment secret above authenticates this device. Ignore outdated readback.
   if (report && report.revision === revision) {
@@ -264,6 +282,9 @@ export async function deviceHeartbeat(imei: string, secret: string, report?: Res
     frp_account_id: enabled ? account : "",
     frp_revision: revision,
     fully_paid: fullyPaid,
+    sim_enabled: !!simPolicy?.enabled && !fullyPaid && data.lock_override !== "unlocked",
+    sim_expected_hash: simPolicy?.expected_hash ?? "",
+    sim_revision: simPolicy?.revision ?? "",
     // Phone clock locks at this moment even with no internet (null = never auto-lock).
     lock_at: lockDeadline(data as any),
     device_id: data.id,

@@ -17,7 +17,7 @@ class SimLockRuleTest {
     @Test fun disabledOrReleasedPolicyNeverLocks() {
         assertFalse(SimLockRule.shouldLock(false, "approved", emptyList(), 120_000))
     }
-    @Test fun unreadableSimCannotProvideUnlimitedBypass() {
+    @Test fun confirmedAbsenceRemainsLocked() {
         assertTrue(SimLockRule.shouldLock(true, "approved", emptyList(), 120_000))
     }
 }

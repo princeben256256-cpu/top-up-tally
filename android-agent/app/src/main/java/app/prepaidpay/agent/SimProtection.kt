@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -20,10 +21,16 @@ object SimProtection {
             return Observation(emptyList(), false, owner)
         return runCatching {
             val manager = c.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
-            val infos = manager.activeSubscriptionInfoList ?: emptyList()
+            val infos = (manager.activeSubscriptionInfoList ?: emptyList()).filter {
+                android.os.Build.VERSION.SDK_INT < 28 || !it.isEmbedded
+            }
+            val phone = c.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            val absent = android.os.Build.VERSION.SDK_INT >= 26 && phone.phoneCount > 0 &&
+                (0 until phone.phoneCount).all { phone.getSimState(it) == TelephonyManager.SIM_STATE_ABSENT }
             val secret = Prefs.secret(c).orEmpty()
             val serials = infos.map { it.iccId.orEmpty().trim() }
-            val readable = secret.isNotBlank() && serials.all { it.matches(Regex("^[0-9]{10,32}$")) }
+            val readable = secret.isNotBlank() && (serials.isNotEmpty() || absent) &&
+                serials.all { it.matches(Regex("^[0-9]{10,32}$")) }
             val hashes = if (!readable) emptyList() else serials.map { serial ->
                 MessageDigest.getInstance("SHA-256").digest((secret + ":" + serial).toByteArray(Charsets.UTF_8))
                     .joinToString("") { "%02x".format(it.toInt() and 0xff) }
@@ -36,7 +43,7 @@ object SimProtection {
         val sp = store(c)
         val changed = sp.getString("revision", "") != revision || sp.getBoolean("enabled", false) != enabled
         val edit = sp.edit().putBoolean("enabled", enabled).putString("expected", expected).putString("revision", revision)
-        if (changed) edit.remove("missing_since").remove("boot_count")
+        if (changed) edit.remove("missing_since").remove("boot_count").remove("violation")
         edit.commit()
     }
 
@@ -58,8 +65,13 @@ object SimProtection {
         if (!sp.getBoolean("enabled", false)) return false
         val expected = sp.getString("expected", "").orEmpty()
         val observation = observe(c)
-        return SimLockRule.shouldLock(true, expected, observation.hashes,
+        // Radio-off, SIM PIN and redacted reads are not proof of removal.
+        // They must not clear an already-confirmed violation either.
+        if (!observation.readable) return sp.getBoolean("violation", false)
+        val violation = SimLockRule.shouldLock(true, expected, observation.hashes,
             missingDuration(c, SimLockRule.matches(expected, observation.hashes)))
+        sp.edit().putBoolean("violation", violation).apply()
+        return violation
     }
 
     fun report(c: Context): JSONObject {
