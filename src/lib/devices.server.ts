@@ -33,7 +33,7 @@ export async function getDeviceFor(client: AnyClient, id: string) {
   if (pErr) throw new Error(pErr.message);
 
   const { data: report, error: reportError } = await client.from("device_reset_reports")
-    .select("state, revision, android_sdk, device_owner, settings_reset_blocked, received_at")
+    .select("state, revision, android_sdk, device_owner, settings_reset_blocked, received_at, app_version, frp_supported, dev_options_on")
     .eq("device_id", id).maybeSingle();
   if (reportError) throw new Error(reportError.message);
   const { data: settings, error: settingsError } = await client.from("app_settings")
@@ -253,7 +253,9 @@ export async function deviceHeartbeat(imei: string, secret: string, report?: Res
   // The enrollment secret above authenticates this device. Ignore outdated readback.
   if (report && report.revision === revision) {
     const { error: reportError } = await supabaseAdmin.from("device_reset_reports").upsert({
-      device_id: data.id, ...report, received_at: new Date().toISOString(),
+      device_id: data.id, ...report,
+      app_version: report.app_version ?? null, frp_supported: report.frp_supported ?? null,
+      dev_options_on: report.dev_options_on ?? null, received_at: new Date().toISOString(),
     });
     if (reportError) throw new Error(reportError.message);
   }

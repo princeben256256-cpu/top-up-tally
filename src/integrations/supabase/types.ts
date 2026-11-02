@@ -127,8 +127,11 @@ export type Database = {
       device_reset_reports: {
         Row: {
           android_sdk: number
+          app_version: number | null
+          dev_options_on: boolean | null
           device_id: string
           device_owner: boolean
+          frp_supported: boolean | null
           received_at: string
           revision: string
           settings_reset_blocked: boolean
@@ -136,8 +139,11 @@ export type Database = {
         }
         Insert: {
           android_sdk: number
+          app_version?: number | null
+          dev_options_on?: boolean | null
           device_id: string
           device_owner: boolean
+          frp_supported?: boolean | null
           received_at?: string
           revision: string
           settings_reset_blocked: boolean
@@ -145,8 +151,11 @@ export type Database = {
         }
         Update: {
           android_sdk?: number
+          app_version?: number | null
+          dev_options_on?: boolean | null
           device_id?: string
           device_owner?: boolean
+          frp_supported?: boolean | null
           received_at?: string
           revision?: string
           settings_reset_blocked?: boolean

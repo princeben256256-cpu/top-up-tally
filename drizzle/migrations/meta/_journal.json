@@ -78,6 +78,13 @@
       "when": 1793408659735,
       "tag": "0010_device_reset_policy_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793618989427,
+      "tag": "0011_reset_report_app_version",
+      "breakpoints": true
     }
   ]
 }

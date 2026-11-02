@@ -12,13 +12,37 @@ import android.os.UserManager
  */
 object DeviceOwner {
 
-    data class ResetReport(val state: String, val revision: String, val sdk: Int, val owner: Boolean, val resetBlocked: Boolean) {
+    data class ResetReport(
+        val state: String, val revision: String, val sdk: Int, val owner: Boolean, val resetBlocked: Boolean,
+        val appVersion: Int = BuildConfig.VERSION_CODE, val frpSupported: Boolean? = null, val devOptionsOn: Boolean = false,
+    ) {
         fun json() = org.json.JSONObject()
             .put("state", state).put("revision", revision).put("android_sdk", sdk)
             .put("device_owner", owner).put("settings_reset_blocked", resetBlocked)
+            .put("app_version", appVersion).put("dev_options_on", devOptionsOn)
+            .apply { frpSupported?.let { put("frp_supported", it) } }
     }
-    @Volatile var resetReport: ResetReport? = null
-        private set
+    @Volatile private var memReport: ResetReport? = null
+
+    /** Last readback; persisted so a process restart still sends it on the next check-in. */
+    fun resetReport(context: Context): ResetReport? {
+        memReport?.let { return it }
+        val raw = context.getSharedPreferences("mulika_reset", Context.MODE_PRIVATE)
+            .getString("report", null) ?: return null
+        return runCatching {
+        val j = org.json.JSONObject(raw)
+        ResetReport(j.getString("state"), j.getString("revision"), j.getInt("android_sdk"),
+            j.getBoolean("device_owner"), j.getBoolean("settings_reset_blocked"),
+            BuildConfig.VERSION_CODE, if (j.has("frp_supported")) j.getBoolean("frp_supported") else null,
+            j.optBoolean("dev_options_on", false))
+        }.getOrNull().also { memReport = it }
+    }
+
+    private fun saveReport(context: Context, r: ResetReport?) {
+        memReport = r
+        context.getSharedPreferences("mulika_reset", Context.MODE_PRIVATE).edit()
+            .putString("report", r?.json()?.toString()).apply()
+    }
 
     fun admin(context: Context) = ComponentName(context, AgentAdminReceiver::class.java)
 
@@ -122,9 +146,18 @@ object DeviceOwner {
         val resetBlocked = owner && runCatching {
             dpm.getUserRestrictions(admin).getBoolean(UserManager.DISALLOW_FACTORY_RESET)
         }.getOrDefault(false)
+        // Public Android 11+ support signal; null when it cannot be read.
+        val supported: Boolean? = if (Build.VERSION.SDK_INT >= 30) runCatching {
+            dpm.isFactoryResetProtectionPolicySupported()
+        }.getOrNull() else false
+        val devOn = runCatching {
+            android.provider.Settings.Global.getInt(context.contentResolver,
+                android.provider.Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) == 1
+        }.getOrDefault(false)
         fun report(state: String) {
-            resetReport = if (revision.matches(Regex("^[a-f0-9]{64}$")))
-                ResetReport(state, revision, Build.VERSION.SDK_INT, owner, resetBlocked) else null
+            saveReport(context, if (revision.matches(Regex("^[a-f0-9]{64}$")))
+                ResetReport(state, revision, Build.VERSION.SDK_INT, owner, resetBlocked,
+                    BuildConfig.VERSION_CODE, supported, devOn) else null)
         }
         val preflight = ResetPolicyRule.preflight(owner, Build.VERSION.SDK_INT, clean, fullyPaid)
         if (preflight != null) { report(preflight); return }

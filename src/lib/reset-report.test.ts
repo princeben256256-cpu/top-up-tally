@@ -21,3 +21,15 @@ describe("Gmail policy reporting safeguards", () => {
     expect(resetReportSchema.safeParse({ state: "protected", revision: "a".repeat(64), android_sdk: 35, device_owner: true, settings_reset_blocked: true }).success).toBe(false);
   });
 });
+import { resetReportSchema as schemaV14 } from "./reset-report";
+describe("lock app 1.4 report fields", () => {
+  const base = { state: "accepted", revision: "a".repeat(64), android_sdk: 33, device_owner: true, settings_reset_blocked: true };
+  it("still accepts reports from older lock apps without version", () => {
+    expect(schemaV14.safeParse(base).success).toBe(true);
+  });
+  it("keeps version and Gmail-support flags from new lock apps", () => {
+    const r = schemaV14.parse({ ...base, app_version: 6, frp_supported: false, dev_options_on: true });
+    expect(r.app_version).toBe(6);
+    expect(r.frp_supported).toBe(false);
+  });
+});

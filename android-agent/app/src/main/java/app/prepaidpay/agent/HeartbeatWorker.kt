@@ -24,7 +24,7 @@ class HeartbeatWorker(appContext: Context, params: WorkerParameters) :
         if (imei.isNullOrBlank() || secret.isNullOrBlank()) return@withContext Result.success()
 
         try {
-            val status = Api.heartbeat(imei, secret)
+            val status = Api.heartbeat(ctx, imei, secret)
             if (status != null) Prefs.saveStatus(ctx, status)
         } catch (_: Exception) {
             // Offline: fall through, Prefs.shouldLock() enforces the grace window.

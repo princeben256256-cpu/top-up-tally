@@ -6,6 +6,10 @@ export const resetReportSchema = z.object({
   android_sdk: z.number().int().min(24).max(100),
   device_owner: z.boolean(),
   settings_reset_blocked: z.boolean(),
+  // Optional so older lock apps keep checking in.
+  app_version: z.number().int().min(1).max(100000).optional(),
+  frp_supported: z.boolean().optional(),
+  dev_options_on: z.boolean().optional(),
 });
 export type ResetReport = z.infer<typeof resetReportSchema>;
 
