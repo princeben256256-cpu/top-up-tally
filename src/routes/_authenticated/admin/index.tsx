@@ -144,13 +144,19 @@ function AdminHome() {
             if (!customerDeviceId) return;
             navigate({ to: "/admin/register/$id", params: { id: customerDeviceId } });
           }}>
-            <label htmlFor="customer-device" className="text-sm font-medium">Customer's phone</label>
-            <select id="customer-device" required value={customerDeviceId} onChange={(event) => setCustomerDeviceId(event.target.value)} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm text-foreground">
-              <option value="">Select a registered phone</option>
-              {devices.map((device: any) => (
-                <option key={device.id} value={device.id}>{device.device_model || "Phone"} · {device.imei}{device.customer_name ? ` · ${device.customer_name}` : " · In stock"}</option>
-              ))}
-            </select>
+            <label htmlFor="customer-device" className="text-sm font-medium">Phone to sell (in stock)</label>
+            {devices.some((device: any) => !device.customer_name) ? (
+              <select id="customer-device" required value={customerDeviceId} onChange={(event) => setCustomerDeviceId(event.target.value)} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm text-foreground">
+                <option value="">Select an in-stock phone</option>
+                {devices.filter((device: any) => !device.customer_name).map((device: any) => (
+                  <option key={device.id} value={device.id}>{device.device_model || "Phone"} · {device.imei}</option>
+                ))}
+              </select>
+            ) : (
+              <p className="rounded-md border border-border bg-card p-3 text-sm text-muted-foreground">
+                No phone in stock. Every phone already has a customer. Tap <span className="font-semibold text-foreground">Register phone</span> below to add a new phone first, then come back here.
+              </p>
+            )}
             <Button type="submit" disabled={!customerDeviceId}>Open customer form</Button>
           </form>
         )}
