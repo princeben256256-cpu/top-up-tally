@@ -227,6 +227,9 @@ function DeviceDetail() {
               </p>
               <p>Device owner: {data.reset_report.device_owner ? "Active" : "Not active"} · Android API {data.reset_report.android_sdk}</p>
               <p>Reset in Settings: {data.reset_report.settings_reset_blocked ? "Blocked — phone reported" : "NOT BLOCKED — do not hand over this phone"}</p>
+              <p>Lock app version: {data.reset_report.app_version ?? "OLD (before 1.4) — re-enroll with the QR code"}</p>
+              <p>Phone supports Gmail lock: {data.reset_report.frp_supported == null ? "Unknown (old lock app)" : data.reset_report.frp_supported ? "Yes — Android says supported" : "NO — this phone cannot hold the Gmail lock"}</p>
+              {data.reset_report.dev_options_on && <p className="font-semibold text-destructive">Developer options are ON — this phone may have been tampered with (unlocked phones erase the Gmail lock)</p>}
               <p className="text-xs text-muted-foreground">Reported {new Date(data.reset_report.received_at).toLocaleString()}</p>
             </div>
           ) : <p className="mt-2 text-sm font-semibold text-destructive">NOT VERIFIED — no report from the new lock app yet</p>}

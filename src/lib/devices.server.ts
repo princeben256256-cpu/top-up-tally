@@ -253,7 +253,9 @@ export async function deviceHeartbeat(imei: string, secret: string, report?: Res
   // The enrollment secret above authenticates this device. Ignore outdated readback.
   if (report && report.revision === revision) {
     const { error: reportError } = await supabaseAdmin.from("device_reset_reports").upsert({
-      device_id: data.id, ...report, received_at: new Date().toISOString(),
+      device_id: data.id, ...report,
+      app_version: report.app_version ?? null, frp_supported: report.frp_supported ?? null,
+      dev_options_on: report.dev_options_on ?? null, received_at: new Date().toISOString(),
     });
     if (reportError) throw new Error(reportError.message);
   }
