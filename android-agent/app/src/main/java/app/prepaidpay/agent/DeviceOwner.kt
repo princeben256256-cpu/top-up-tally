@@ -25,14 +25,18 @@ object DeviceOwner {
     @Volatile private var memReport: ResetReport? = null
 
     /** Last readback; persisted so a process restart still sends it on the next check-in. */
-    fun resetReport(context: Context): ResetReport? = memReport ?: runCatching {
-        val raw = context.getSharedPreferences("mulika_reset", Context.MODE_PRIVATE).getString("report", null) ?: return null
+    fun resetReport(context: Context): ResetReport? {
+        memReport?.let { return it }
+        val raw = context.getSharedPreferences("mulika_reset", Context.MODE_PRIVATE)
+            .getString("report", null) ?: return null
+        return runCatching {
         val j = org.json.JSONObject(raw)
         ResetReport(j.getString("state"), j.getString("revision"), j.getInt("android_sdk"),
             j.getBoolean("device_owner"), j.getBoolean("settings_reset_blocked"),
             BuildConfig.VERSION_CODE, if (j.has("frp_supported")) j.getBoolean("frp_supported") else null,
             j.optBoolean("dev_options_on", false))
-    }.getOrNull().also { memReport = it }
+        }.getOrNull().also { memReport = it }
+    }
 
     private fun saveReport(context: Context, r: ResetReport?) {
         memReport = r
