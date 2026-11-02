@@ -10,6 +10,7 @@ import { getCustomerKyc } from "@/lib/kyc.functions";
 import { requestPaymentFromCustomer } from "@/lib/payments.functions";
 import { balanceOf, daysRemaining, formatDate, formatMoney, isLocked, lockSchedule } from "@/lib/lock";
 import { Switch } from "@/components/ui/switch";
+import { SimProtectionPanel } from "@/components/SimProtectionPanel";
 
 const resetReportLabels: Record<string, string> = {
   accepted: "ACCEPTED — Android policy readback matched",
@@ -218,6 +219,7 @@ function DeviceDetail() {
         )}
 
         {isAdmin && <ResetLockSwitch id={id} on={!!(d as any).frp_enabled} />}
+        <SimProtectionPanel id={id} policy={data.sim_policy} isAdmin={isAdmin} />
         <section aria-label="Phone reset protection report" className="mt-4 border-y border-border py-4">
           <h2 className="font-display text-sm font-semibold">Gmail protection — phone report</h2>
           {data.reset_report ? (
