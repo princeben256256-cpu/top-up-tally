@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, ShieldCheck, Lock, Smartphone, Wallet, Package, LogOut } from "lucide-react";
+import { Plus, Search, ShieldCheck, Lock, Smartphone, Wallet, Package, LogOut, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { listDevices, createDevice, getMyRole, getAgentSettings, saveAgentSettings } from "@/lib/devices.functions";
 import { isLocked, balanceOf, formatMoney, daysRemaining, lockSchedule } from "@/lib/lock";
 import { AgentsPanel } from "@/components/AgentsPanel";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -43,6 +44,8 @@ function AdminHome() {
   const [search, setSearch] = useState("");
   const [folder, setFolder] = useState<"all" | "unseen">("all");
   const [showForm, setShowForm] = useState(false);
+  const [showCustomerPicker, setShowCustomerPicker] = useState(false);
+  const [customerDeviceId, setCustomerDeviceId] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [dualSim, setDualSim] = useState(true);
 
@@ -132,6 +135,25 @@ function AdminHome() {
       </header>
 
       <div className="mx-auto w-full max-w-3xl px-5 py-6">
+        <Button size="lg" className="mb-4 w-full" onClick={() => setShowCustomerPicker((open) => !open)} aria-expanded={showCustomerPicker}>
+          <UserPlus /> Register customer
+        </Button>
+        {showCustomerPicker && (
+          <form className="mb-5 grid gap-3" onSubmit={(event) => {
+            event.preventDefault();
+            if (!customerDeviceId) return;
+            navigate({ to: "/admin/register/$id", params: { id: customerDeviceId } });
+          }}>
+            <label htmlFor="customer-device" className="text-sm font-medium">Customer's phone</label>
+            <select id="customer-device" required value={customerDeviceId} onChange={(event) => setCustomerDeviceId(event.target.value)} className="h-11 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm text-foreground">
+              <option value="">Select a registered phone</option>
+              {devices.map((device: any) => (
+                <option key={device.id} value={device.id}>{device.device_model || "Phone"} · {device.imei}{device.customer_name ? ` · ${device.customer_name}` : " · In stock"}</option>
+              ))}
+            </select>
+            <Button type="submit" disabled={!customerDeviceId}>Open customer form</Button>
+          </form>
+        )}
         <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
           <div>
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Outstanding balance</p>
