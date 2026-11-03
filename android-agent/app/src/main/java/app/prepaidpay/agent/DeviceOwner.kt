@@ -78,7 +78,6 @@ object DeviceOwner {
             UserManager.DISALLOW_SAFE_BOOT,
             UserManager.DISALLOW_DEBUGGING_FEATURES,
             UserManager.DISALLOW_UNINSTALL_APPS,
-            UserManager.DISALLOW_CONFIG_TETHERING,
             UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA,
             UserManager.DISALLOW_CONFIG_DATE_TIME,
             UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES,
@@ -87,6 +86,9 @@ object DeviceOwner {
             runCatching { dpm.addUserRestriction(admin, r) }
                 .onFailure { android.util.Log.w("MULIKA", "restriction $r failed", it) }
         }
+        // Removing it from the list alone does not clear an older installed policy.
+        runCatching { HotspotPolicy.allow { dpm.clearUserRestriction(admin, it) } }
+            .onFailure { android.util.Log.w("MULIKA", "Hotspot restriction could not be cleared", it) }
         runCatching { dpm.setUninstallBlocked(admin, context.packageName, true) }
         runCatching { dpm.setStatusBarDisabled(admin, false) }
         runCatching { dpm.setAutoTimeRequired(admin, true) }
