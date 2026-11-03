@@ -1,4 +1,5 @@
-- [ ] Allow mobile hotspot without weakening reset/uninstall restrictions; implementation complete, Android test pending; GitHub build, installation and hardware hotspot check require the user.
+- [x] Allow mobile hotspot and clear the older persisted restriction without weakening reset/uninstall restrictions; Android regression test passes.
+- [ ] Verify hotspot on the phone — requires user-run GitHub APK build, installation and physical hotspot check; no reset needed for an in-place update.
 - [x] Expose Register customer at the top of staff home; verified with the owner's signed-in account that selecting a real phone opens the full enrolment form, mobile button fits without overflow, and build is OK. Publication not requested in this turn.
 - [x] Add admin-approved SIM binding, authenticated phone reports and offline Android enforcement; 24 web tests and 6 Android SIM tests pass, Android 35 public API compilation passes, staff SIM section verified signed-in and forged report rejected (401). APK 1.5 build/install and physical SIM tests remain outstanding; unreadable/radio-off states are not treated as confirmed removal.
 - [ ] Verify registered-SIM protection on hardware — requires a new GitHub APK and physical SIM removal/replacement tests.
